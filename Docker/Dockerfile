@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.2.0-cudnn8-devel-ubuntu20.04
+FROM nvidia/cuda:11.3.0-cudnn8-devel-ubuntu20.04
 
 ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
 ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
@@ -35,8 +35,12 @@ RUN apt-get update && apt-get install -y \
     python3-tk \
     python3-pip
 
-RUN pip3 install tensorflow==2.8.0 \
-    tensorflow-gpu==2.8.0 \
+RUN pip3 install \
+    torch==1.10.0+cu113 \
+    torchvision==0.11.1+cu113 \
+    torchaudio==0.10.0+cu113 \
+    -f https://download.pytorch.org/whl/cu113/torch_stable.html 
+RUN pip3 install \
     numpy \
     opencv-python \
     matplotlib
