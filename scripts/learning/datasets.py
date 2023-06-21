@@ -10,14 +10,17 @@ from torch.utils.data import Dataset
 from utils.image import  get_area_of_interest_new
 
 
-class CustomDataset(Dataset):
+class CustomDataset():
    def __init__(self, episodes, seed=None):
       super().__init__()
-      self.episodes = episodes
+      self.keys = list(episodes.keys())
+      self.keys = self.keys[-13000:]
       self.episodes_place_success_index = []
-      for i in range(len(episodes)):
-         if episodes[str(i)]['place']['reward'] > 0:
-            self.episodes_place_success_index.append(i)
+      self.episodes = {}
+      for key in self.keys:
+         self.episodes[key] = episodes[key]
+         if self.episodes[key]['place']['reward'] > 0:
+            self.episodes_place_success_index.append(int(key))
 
 
 
@@ -90,7 +93,8 @@ class CustomDataset(Dataset):
       return new_pose
 
    def generator(self, index):
-      e = self.episodes[str(index)]
+      e = self.episodes[index]
+
       result = []
 
       grasp = e['grasp']
@@ -110,16 +114,16 @@ class CustomDataset(Dataset):
 
       # Generate goal has no action_id
       def generate_goal(g_suffix, g_pose, g_suffix_before='v', g_reward=0, g_index=None, g_place_weight=1.0, g_merge_weight=1.0, jitter=None):
-         if g_suffix == 'v' and g_suffix_before == 'v':
+         if g_suffix == 'v' and g_suffix_before == 'v' and g_pose != None:
                place_goal_before = place_before
                place_goal = place_before
-         elif g_suffix == 'v' and g_suffix_before == 'after':
+         elif g_suffix == 'v' and g_suffix_before == 'after' and g_pose != None:
                place_goal_before = place_after
                place_goal = place_before
-         elif g_suffix == 'after' and g_suffix_before == 'v':
+         elif g_suffix == 'after' and g_suffix_before == 'v' and g_pose != None:
                place_goal_before = place_before
                place_goal = place_after
-         elif g_suffix == 'after' and g_suffix_before == 'after':
+         elif g_suffix == 'after' and g_suffix_before == 'after' and g_pose != None:
                place_goal_before = place_after
                place_goal = place_after
          else:
@@ -127,8 +131,8 @@ class CustomDataset(Dataset):
 
                g_pose = g_pose if g_pose else goal_e['place']['pose']
 
-               place_goal_before = self.load_image(self.img_type, index, 'grasp')
-               place_goal = self.load_image(g_collection, g_episode_id, 1, 'ed-' + g_suffix)
+               place_goal_before = self.load_image(g_index, 'grasp')
+               place_goal = self.load_image(g_index, 'grasp')
 
          if isinstance(jitter, dict):
                g_pose = self.jitter_pose(g_pose, **jitter)
@@ -174,7 +178,7 @@ class CustomDataset(Dataset):
                   break
 
                if place_later['reward'] > 0:
-                  result.append(generate_goal(None, None, 'after', place['pose'], g_index=i, g_reward=1))
+                  result.append(generate_goal('after', place['pose'], g_index=i+int(self.keys[0]), g_reward=1))
 
       if self.use_negative_foresight:
          g_suffix, g_suffix_before = random.choice([('v', 'v'), ('after', 'after'), ('v', 'after')])
@@ -190,13 +194,13 @@ class CustomDataset(Dataset):
 
       if self.use_different_episodes_as_goals and self.episodes_place_success_index!=[]:
          result += [
-               generate_goal('after', None, g_index=goal_index, g_place_weight=0.0)
+               generate_goal('after', None, g_index=self.keys[goal_index], g_place_weight=0.0)
                for goal_index in self.random_gen.choice(self.episodes_place_success_index, size=self.different_episodes_images)
          ]
 
          if place['reward'] > 0:
                result += [
-                  generate_goal('after', None, g_index=goal_index, g_place_weight=0.0)
+                  generate_goal('after', None, g_index=self.keys[goal_index], g_place_weight=0.0)
                   for goal_index in self.random_gen.choice(self.episodes_place_success_index, size=self.different_episodes_images_success)
                ]
 
@@ -217,10 +221,34 @@ class CustomDataset(Dataset):
    def torch_generator(self, index):
       r = self.generator(index)
       r = tuple(torch.from_numpy(arr) for arr in r)
-      return (r[0], r[1], r[2]), (r[3], r[4], r[5])
+      return r
 
-   def __len__(self):
-      return len(self.episodes)
+   def get_data(self):
+      imgs_g = torch.empty(0)
+      imgs_p = torch.empty(0)
+      imgs_m = torch.empty(0)
+      rewards = torch.empty(0)
+      index = torch.empty(0)
+      weights = torch.empty(0)
+      
+      data = []
+      # imgs = []
+      # label = []
+      for key in self.keys:
+         r = self.torch_generator(key)
+         for b_dx in range(r[0].shape[0]):
+            # imgs.append((r[0][b_dx], r[1][b_dx], r[2][b_dx]))
+            # label.append((r[3][b_dx], r[4][b_dx], r[5][b_dx]))
+            data.append(((r[0][b_dx], r[1][b_dx], r[2][b_dx]), (r[3][b_dx], r[4][b_dx], r[5][b_dx])))
 
-   def __getitem__(self, index):
-      return self.torch_generator(index)
+         # imgs_g = torch.cat((imgs_g, r[0]), dim=0)
+         # imgs_p = torch.cat((imgs_p, r[1]), dim=0)
+         # imgs_m = torch.cat((imgs_m, r[2]), dim=0)
+         # rewards = torch.cat((rewards, r[3]), dim=0)
+         # index = torch.cat((index, r[4]), dim=0)
+         # weights = torch.cat((weights, r[5]), dim=0)
+         # imgs.append([imgs_g, imgs_p, imgs_m])
+         # label.append([rewards, index, weights])
+      # print("***********",len(imgs))
+
+      return data

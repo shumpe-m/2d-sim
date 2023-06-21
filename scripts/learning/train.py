@@ -19,17 +19,17 @@ def parse_args():
    parser = argparse.ArgumentParser(description='Training pipeline for pick-and-place.')
    parser.add_argument('-i', '--image_format', action='store', dest='image_format', type=str, default='png')
    parser.add_argument('-p', '--path', action='store', dest='data_path', type=str, default="/root/2D-sim/scripts/data")
+   parser.add_argument('-m', '--load_model', action='store_true', dest='load_model')
 
    args = parser.parse_args()
    return args 
 
 class Train:
-   def __init__(self, data_path=None, image_format='png'):
+   def __init__(self, data_path=None, image_format='png', load_model=True):
       input_shape = [None, None, 1] if True else [None, None, 3]
       z_shape = 48
-      train_batch_size = 64
+      train_batch_size = 512
       validation_batch_size = 512
-      lode_model=True
       number_primitives = 4
       percent_validation_set = 0.2
       self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -46,14 +46,10 @@ class Train:
       # get dataset
       with open(dataset_path, mode="rt", encoding="utf-8") as f:
          all_data = json.load(f)
-      keys = list(all_data.keys())
-      keys = keys[-13000:]
-      data={}
-      for key in keys:
-         data[key] = all_data[key]
-      print("dateset:",len(all_data))
-      datasets = CustomDataset(data, seed=42)
-      datasets_length = len(datasets)
+
+      custom_ds = CustomDataset(all_data, seed=42)
+      datasets = custom_ds.get_data()
+      datasets_length =len(datasets)
       val_data_length = int(datasets_length * percent_validation_set)
       train_data_length = datasets_length - val_data_length
       train_dataset, val_dataset = torch.utils.data.random_split(datasets, [train_data_length, val_data_length])
@@ -83,7 +79,7 @@ class Train:
       optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=0.001)
       class_weights = torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 4.0]).to(self.device)
       criterion = Losses(self.device)
-      if lode_model:
+      if load_model:
          cptfile = '/root/2D-sim/scripts/data/checkpoints/out.cpt'
          cpt = torch.load(cptfile)
          stdict_m = cpt['combined_model_state_dict']
@@ -168,4 +164,5 @@ if __name__ == '__main__':
     train = Train(
         image_format=args.image_format,
         data_path=args.data_path,
+        load_model=args.load_model
     )

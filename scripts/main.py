@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import os
-from subprocess import Popen
 import sys
+from subprocess import Popen
+import time
 
 import numpy as np
 import cv2
@@ -45,18 +46,20 @@ class SelfLearning(Environment):
       super().__init__()
       self.inference = Inference()
       self.grasp_decision = GraspDecision()
-
+      self.load_model_args =  [] # train
       self.episode = 0
       self.image_states = ["grasp", "place_b", "goal", "place_a"]
       self.percentage_secondary = 0.1
       self.primary_selection_method = SelectionMethod.Max
       self.secondary_selection_method = SelectionMethod.Prob
+      self.previous_model_timestanp=""
 
    def manipulate(self):
       data = {}
-      while self.episode < 50000:
+      
+      while self.episode < 100000:
          print(self.episode)
-         if self.episode < 2000:
+         if self.episode < 200:
             method = SelectionMethod.Random
          else:
             method = self.secondary_selection_method if np.random.rand() > self.percentage_secondary else SelectionMethod.Random
@@ -69,7 +72,7 @@ class SelfLearning(Environment):
          # TODO: get camera images
 
          # grasp images
-         grasp_imgs = self.plot_env(episode = self.episode, num_obj = 3, image_state = self.image_states[0])
+         grasp_imgs = self.plot_env(episode = self.episode, num_obj = 1, image_state = self.image_states[0])
 
          # goal images
          dir = "./data/obj_info/obj_info" + str(self.episode) + ".json"
@@ -79,12 +82,11 @@ class SelfLearning(Environment):
          
          # place_b images
          place_b_imgs = self.plot_env(episode = self.episode, num_obj = 0, image_state = self.image_states[1])
-         actions = self.inference.infer(grasp_imgs[1], goal_imgs[1], method, place_images=place_b_imgs[1])
+         actions = self.inference.infer(grasp_imgs[1], goal_imgs[1], method, place_images=place_b_imgs[1], episode=self.episode)
          # TODO: planning grasp_trajectry
          reward = 0
          # decicsion success
          for obj_info in obj_infos:
-
             grasp_execute = self.grasp_decision.is_cheked_grasping(actions["grasp"], obj_infos[str(obj_info)])
             if grasp_execute:
                place_obj_info = obj_infos[str(obj_info)]
@@ -111,15 +113,26 @@ class SelfLearning(Environment):
          json_file.close()
 
          # learning
+         if self.episode == 10:
+            self.load_model_args = ['--load_model']
          self.retrain_model()
 
          self.episode += 1
-
+         time.sleep(1)
 
    def retrain_model(self) -> None:
-      train_script = Path.home() / '2D-sim' / 'scripts' / 'learning' / 'train.py'
-      process = Popen([sys.executable, str(train_script)])
+      cmd = '/root/2D-sim/scripts/learning/train.py'
+      process = Popen(["python3", cmd] + self.load_model_args)
       process.communicate()
+
+
+      # with open('./data/checkpoints/timestamp.txt', 'r') as f:
+      #    saved_timestamp = f.read()
+      # if self.previous_model_timestanp!=saved_timestamp and self.episode > 8:
+      #    self.previous_model_timestanp = saved_timestamp
+      #    cmd = '/root/2D-sim/scripts/learning/train.py'
+      #    process = Popen(["python3", cmd] + self.load_model_args)
+      #    process.communicate()
 
 
 learn = SelfLearning()

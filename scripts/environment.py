@@ -14,11 +14,13 @@ class Environment:
       self.depth_size = (size[0], size[1], 1)
 
       self.obj_forms = ["rectangle", "circle"]
-      self.size_range = [70, 120] # [min,max]
+      self.size_range = [75, 100] # [min,max]
+      self.rec_size = [50, 80]
+      self.cir_size = [40]
 
       # np.random.seed(seed=1)
 
-   def plot_env(self, episode:int = 0, num_obj: int = 1, image_state:str = "grasp", display:bool=True, action:np.array=None, obj_info:dict=None, path:str="./data"):
+   def plot_env(self, episode:int = 0, num_obj: int = 1, image_state:str = "grasp", display:bool=False, action:np.array=None, obj_info:dict=None, path:str="./data"):
       path_dir = pathlib.Path(path)
 
       rgb_img = np.ones(self.rgb_size) * 255
@@ -40,10 +42,10 @@ class Environment:
          plt.clf()
          plt.close()
       else:
-         plt.imshow(rgb_img)
+         # plt.imshow(rgb_img)
          plt.imshow(depth_img, cmap='gray')
 
-      cv2.imwrite(str(path_dir.joinpath('img/rgb_' + image_state + str(episode) + '.png')), rgb_img)
+      # cv2.imwrite(str(path_dir.joinpath('img/rgb_' + image_state + str(episode) + '.png')), rgb_img)
       cv2.imwrite(str(path_dir.joinpath('img/depth_' + image_state + str(episode) + '.png')), depth_img)
 
       #  
@@ -60,7 +62,7 @@ class Environment:
       if isinstance(obj_info,type(None)):
          obj_form = self.obj_forms[np.random.randint(0, 2, 1)[0]]
          color = np.random.randint(0, 255, 3).tolist()
-         depth = np.random.randint(20, 50, 1).tolist()
+         depth = np.random.randint(40, 45, 1).tolist()
       else:
          obj_form = obj_info["form"]
          color = obj_info["color"]
@@ -103,7 +105,8 @@ class Environment:
       pose_range = np.array([self.rgb_size[1], self.rgb_size[0]]) - np.array([self.size_range[1], self.size_range[1]])
 
       if obj_form == "rectangle":
-         obj_size = np.random.randint(self.size_range[0], self.size_range[1], 2) if isinstance(obj_info, type(None)) else np.array(obj_info["size"])
+         # obj_size = np.random.randint(self.size_range[0], self.size_range[1], 2) if isinstance(obj_info, type(None)) else np.array(obj_info["size"])
+         obj_size = np.array(self.rec_size) if isinstance(obj_info, type(None)) else np.array(obj_info["size"])
 
          if isinstance(action, type(None)):
             obj_cpose = np.multiply(np.random.rand(2), pose_range)
@@ -129,13 +132,13 @@ class Environment:
          return obj_cpose.astype(np.int64), angle, points.astype(np.int64), obj_size
 
       elif obj_form == "circle":
-         obj_size = np.random.randint(self.size_range[0]/2, self.size_range[1]/2, 1) if isinstance(obj_info, type(None)) else np.array(obj_info["size"])
-
+         # obj_size = np.random.randint(self.size_range[0]/2, self.size_range[1]/2, 1) if isinstance(obj_info, type(None)) else np.array(obj_info["size"])
+         obj_size = np.array(self.cir_size) if isinstance(obj_info, type(None)) else np.array(obj_info["size"])
          if isinstance(action, type(None)):
             obj_cpose = np.multiply(np.random.rand(2), pose_range)
             obj_cpose += np.array([self.size_range[1]/2, self.size_range[1]/2])
          else:
-            obj_cpose = action[:2]
+            obj_cpose = np.array(action[:2])
             # angle = action[2]
 
          return obj_cpose.astype(np.int64), obj_size

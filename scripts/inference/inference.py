@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import ConcatDataset, DataLoader, Dataset
 from itertools import product
+import json
 
 from inference.inference_utils import InferenceUtils
 from utils.param import SelectionMethod
@@ -35,7 +36,7 @@ class Inference(InferenceUtils):
    def reload_model_weights(self, lode_model = True):
       with open('./data/checkpoints/timestamp.txt', 'r') as f:
          saved_timestamp = f.read()
-      if lode_model and self.previous_model_timestanp==saved_timestamp:
+      if lode_model and self.previous_model_timestanp!=saved_timestamp:
          cptfile = './data/checkpoints/out.cpt'
          cpt = torch.load(cptfile)
          self.grasp_model.load_state_dict(cpt['grasp_model_state_dict'])
@@ -51,6 +52,7 @@ class Inference(InferenceUtils):
          method: SelectionMethod,
          verbose=1,
          place_images = None,
+         episode = None,
       ):
       self.reload_model_weights()
       start = time.time()
@@ -58,11 +60,16 @@ class Inference(InferenceUtils):
       grasp_action = {}
       place_action = {}
       if method == SelectionMethod.Random:
+         dir = "./data/obj_info/obj_info" + str(episode) + ".json"
+         with open(dir, mode="rt", encoding="utf-8") as f:
+                     obj_infos = json.load(f)
+         pose = obj_infos["0"]["center_psoe"]
+         angle = obj_infos["0"]["angle"] if obj_infos["0"]["angle"] != None else np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])
          grasp_action["index"] = int(np.random.choice(range(3)))
 
-         grasp_action["pose"] = [np.random.uniform(self.lower_random_pose[0], self.upper_random_pose[0]),  # [m]
-                                 np.random.uniform(self.lower_random_pose[1], self.upper_random_pose[1]),  # [m]
-                                 np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])] # [rad]
+         grasp_action["pose"] = [pose[0],
+                                 pose[1], # [m]
+                                 angle] # [rad]
          grasp_action["estimated_reward"] = -1
          grasp_action["step"] = 0
 
@@ -111,7 +118,7 @@ class Inference(InferenceUtils):
       np_reward_g = reward_g.to('cpu').detach().numpy().copy()
       np_reward_p = reward_p.to('cpu').detach().numpy().copy()
       g_top_index = filter_lambda_n_grasp(np_reward_g)
-      p_top_index = filter_lambda_n_place(np_reward_g)
+      p_top_index = filter_lambda_n_place(np_reward_p)
 
       g_top_index_unraveled = np.transpose(np.asarray(np.unravel_index(g_top_index, reward_g.shape)))
       p_top_index_unraveled = np.transpose(np.asarray(np.unravel_index(p_top_index, reward_p.shape)))
