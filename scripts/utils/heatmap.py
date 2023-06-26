@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from inference.inference import Inference
-from models.models_sub import GraspModel, PlaceModel, MergeModel
+from models.models import GraspModel, PlaceModel, MergeModel
 
 
 class Heatmap:
