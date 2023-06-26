@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
    image_grasp = cv2.imread("./data/img/depth_grasp0.png", cv2.IMREAD_GRAYSCALE)
    image_place = cv2.imread("./data/img/depth_place_b0.png", cv2.IMREAD_GRAYSCALE)
-   image_goal = cv2.imread("./data/goal/cir_goal1.png", cv2.IMREAD_GRAYSCALE)
+   image_goal = cv2.imread("./data/goal/rec_goal1.png", cv2.IMREAD_GRAYSCALE)
 
 
    grasp_model = GraspModel(1).float().to(device)

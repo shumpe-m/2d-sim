@@ -16,6 +16,7 @@ from inference.inference_utils import InferenceUtils
 from environment import Environment
 from utils.param import Mode, SelectionMethod
 from action.grasp_decision import GraspDecision
+from learning.train import Train
 
 
 class SelfLearning(Environment):
@@ -23,8 +24,8 @@ class SelfLearning(Environment):
       super().__init__()
       self.inference = Inference()
       self.grasp_decision = GraspDecision()
-      self.load_model_args =  [] # train
-      self.episode = 7123
+      self.load_model_args =  False
+      self.episode = 0
       self.image_states = ["grasp", "place_b", "goal", "place_a"]
       self.percentage_secondary = 0.0
       self.primary_selection_method = SelectionMethod.Max
@@ -95,25 +96,17 @@ class SelfLearning(Environment):
 
          # learning
          if self.episode > 10:
-            self.load_model_args = ['--load_model']
-         self.retrain_model()
+            self.load_model_args = True
+
+         if self.episode > 5:
+            train = Train(
+               image_format="png",
+               data_path="/root/2D-sim/scripts/data",
+               load_model=self.load_model_args
+            )
 
          self.episode += 1
-         time.sleep(1)
 
-   def retrain_model(self):
-      cmd = '/root/2D-sim/scripts/learning/train.py'
-      process = Popen(["python3", cmd] + self.load_model_args)
-      process.communicate()
-
-
-      # with open('./data/checkpoints/timestamp.txt', 'r') as f:
-      #    saved_timestamp = f.read()
-      # if self.previous_model_timestanp!=saved_timestamp and self.episode > 8:
-      #    self.previous_model_timestanp = saved_timestamp
-      #    cmd = '/root/2D-sim/scripts/learning/train.py'
-      #    process = Popen(["python3", cmd] + self.load_model_args)
-      #    process.communicate()
 
 
 learn = SelfLearning()

@@ -14,7 +14,7 @@ class CustomDataset():
    def __init__(self, episodes, seed=None):
       super().__init__()
       self.keys = list(episodes.keys())
-      self.keys = self.keys[-3096:]
+      self.keys = self.keys[-1024:]
       self.episodes_place_success_index = []
       self.episodes = {}
       for key in self.keys:

@@ -7,8 +7,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-import json
 from torch.utils.tensorboard import SummaryWriter
+import json
+import pickle
 
 # from models.models import GraspModel, PlaceModel, MergeModel, Combined_model
 from models.models import GraspModel, PlaceModel, MergeModel, Combined_model
@@ -65,7 +66,9 @@ class Train:
                                  num_workers=2,
                                  drop_last=False,
                                  pin_memory=True)
-
+      
+      # with open('./data/datasets/dataset.npy', 'wb') as file:
+      #    pickle.dump(datasets, file)
 
       # set up nn model
       grasp_model = GraspModel(input_shape[2]).to(self.device)
