@@ -43,6 +43,8 @@ RUN pip3 install \
 RUN pip3 install \
     numpy \
     opencv-python \
-    matplotlib
+    matplotlib \
+    tensorboard \
+    loguru
 
 RUN echo "cd /root/2D-sim" >> ~/.bashrc

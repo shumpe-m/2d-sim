@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from models.layers import ConvBlock, ConvBlockRemoveWeightNorm, LinearBlock, LinearBlockRemoveWeightNorm
+from models.layers import ConvBlock, LinearBlock
 
 class GraspModel(nn.Module):
     def __init__(self, in_channels):
@@ -12,37 +12,40 @@ class GraspModel(nn.Module):
       self.conv_block2 = ConvBlock(in_channels = 32, out_channels = 32, stride = 2)
       self.conv_block3 = ConvBlock(in_channels = 32, out_channels = 32)
 
-      self.conv_block4 = ConvBlock(in_channels = 32, out_channels = 48)
-      self.conv_block5 = ConvBlock(in_channels = 48, out_channels = 48)
+      self.conv_block_r1 = ConvBlock(in_channels = 32, out_channels = 48)
+      self.conv_block_r2 = ConvBlock(in_channels = 48, out_channels = 48)
       
-      self.conv_block_r1 = ConvBlock(in_channels = 48, out_channels = 64)
-      self.conv_block_r2 = ConvBlock(in_channels = 64, out_channels = 64)
+      self.conv_block_r3 = ConvBlock(in_channels = 48, out_channels = 64)
+      self.conv_block_r4 = ConvBlock(in_channels = 64, out_channels = 64)
    
-      self.conv_block_r3 = ConvBlock(in_channels = 64, out_channels = 64)
-      self.conv_block_r4 = ConvBlock(in_channels = 64, out_channels = 48, kernel_size = 2)
-      self.conv_block_r5 = ConvBlockRemoveWeightNorm(in_channels = 48, out_channels = 4, kernel_size = 1)
+      self.conv_block_r5 = ConvBlock(in_channels = 64, out_channels = 64)
+      self.conv_block_r6 = ConvBlock(in_channels = 64, out_channels = 48, kernel_size = 2)
+      self.conv_block_r_last = nn.Conv2d(in_channels = 48, out_channels = 4, kernel_size = 1, stride = 1)
 
-      self.conv_block_z1 = ConvBlock(in_channels = 48, out_channels = 64)
+      self.conv_block_z1 = ConvBlock(in_channels = 32, out_channels = 64)
       self.conv_block_z2 = ConvBlock(in_channels = 64, out_channels = 64)
       
       self.conv_block_z3 = ConvBlock(in_channels = 64, out_channels = 96)
-      self.conv_block_z4 = ConvBlock(in_channels = 96, out_channels = 96, kernel_size = 2)
-      self.conv_block_z5 = ConvBlock(in_channels = 96, out_channels = 48, kernel_size = 1)
+      self.conv_block_z4 = ConvBlock(in_channels = 96, out_channels = 96)
+   
+      self.conv_block_z5 = ConvBlock(in_channels = 96, out_channels = 128)
+      self.conv_block_z6 = ConvBlock(in_channels = 128, out_channels = 128, kernel_size = 2)
+      self.conv_block_z_last = ConvBlock(in_channels = 128, out_channels = 48, kernel_size = 1)
 
     def forward(self, inputs):
       x = self.conv_block1(inputs)
       x = self.conv_block2(x)
       x = self.conv_block3(x)
 
-      x = self.conv_block4(x)
-      x = self.conv_block5(x)
-
       x_r = self.conv_block_r1(x)
       x_r = self.conv_block_r2(x_r)
 
       x_r = self.conv_block_r3(x_r)
       x_r = self.conv_block_r4(x_r)
-      reward = self.conv_block_r5(x_r)
+
+      x_r = self.conv_block_r5(x_r)
+      x_r = self.conv_block_r6(x_r)
+      reward = self.conv_block_r_last(x_r)
       reward = self.sigmoid(reward)
 
       x = self.conv_block_z1(x)
@@ -50,7 +53,10 @@ class GraspModel(nn.Module):
 
       x = self.conv_block_z3(x)
       x = self.conv_block_z4(x)
-      z = self.conv_block_z5(x)
+
+      x = self.conv_block_z5(x)
+      x = self.conv_block_z6(x)
+      z = self.conv_block_z_last(x)
 
       return z, reward
 
@@ -63,26 +69,40 @@ class PlaceModel(nn.Module):
       self.conv_block1 = ConvBlock(in_channels = in_channels, out_channels = 32)
       self.conv_block2 = ConvBlock(in_channels = 32, out_channels = 32)
 
-      self.conv_block3 = ConvBlock(in_channels = 32, out_channels = 32, dilation = 2)
-      self.conv_block4 = ConvBlock(in_channels = 32, out_channels = 32, dilation = 2)
-      self.conv_block5 = ConvBlock(in_channels = 32, out_channels = 48)
-      self.conv_block6 = ConvBlock(in_channels = 48, out_channels = 48)
+      self.conv_block3 = ConvBlock(in_channels = 32, out_channels = 32)
+      self.conv_block4 = ConvBlock(in_channels = 32, out_channels = 32)
+      self.conv_block5 = ConvBlock(in_channels = 32, out_channels = 32)
+      self.conv_block6 = ConvBlock(in_channels = 32, out_channels = 32)
 
-      self.conv_block7 = ConvBlock(in_channels = 48, out_channels = 48, dilation = 2)
-      self.conv_block8 = ConvBlock(in_channels = 48, out_channels = 48, dilation = 2)
+      self.conv_block_r1 = ConvBlock(in_channels = 32, out_channels = 32)
+      self.conv_block_r2 = ConvBlock(in_channels = 32, out_channels = 32)
       
-      self.conv_block_r1 = ConvBlock(in_channels = 48, out_channels = 64)
-      self.conv_block_r2 = ConvBlock(in_channels = 64, out_channels = 64)
-      self.conv_block_r3 = ConvBlock(in_channels = 64, out_channels = 96)
-      self.conv_block_r4 = ConvBlock(in_channels = 96, out_channels = 64, kernel_size = 2)
-      self.conv_block_r5 = ConvBlockRemoveWeightNorm(in_channels = 64, out_channels = 1, kernel_size = 1)
+      self.conv_block_r3 = ConvBlock(in_channels = 32, out_channels = 48)
+      self.conv_block_r4 = ConvBlock(in_channels = 48, out_channels = 48)
+      self.conv_block_r5 = ConvBlock(in_channels = 48, out_channels = 48)
+      self.conv_block_r6 = ConvBlock(in_channels = 48, out_channels = 48)
 
-      self.conv_block_z1 = ConvBlock(in_channels = 48, out_channels = 64)
-      self.conv_block_z2 = ConvBlock(in_channels = 64, out_channels = 64)
+      self.conv_block_r7 = ConvBlock(in_channels = 48, out_channels = 48)
+      self.conv_block_r8 = ConvBlock(in_channels = 48, out_channels = 48)
+
+      self.conv_block_r9 = ConvBlock(in_channels = 48, out_channels = 64)
+      self.conv_block_r10 = ConvBlock(in_channels = 64, out_channels = 48, kernel_size = 2)
+      self.conv_block_r_last = nn.Conv2d(in_channels = 48, out_channels = 1, kernel_size = 1, stride = 1)
+
+      self.conv_block_z1 = ConvBlock(in_channels = 32, out_channels = 48)
+      self.conv_block_z2 = ConvBlock(in_channels = 48, out_channels = 48)
       
-      self.conv_block_z3 = ConvBlock(in_channels = 64, out_channels = 96)
-      self.conv_block_z4 = ConvBlock(in_channels = 96, out_channels = 96, kernel_size = 1)
-      self.conv_block_z5 = ConvBlock(in_channels = 96, out_channels = 48, kernel_size = 1)
+      self.conv_block_z3 = ConvBlock(in_channels = 48, out_channels = 64)
+      self.conv_block_z4 = ConvBlock(in_channels = 64, out_channels = 64)
+      self.conv_block_z5 = ConvBlock(in_channels = 64, out_channels = 64)
+      self.conv_block_z6 = ConvBlock(in_channels = 64, out_channels = 64)
+
+      self.conv_block_z7 = ConvBlock(in_channels = 64, out_channels = 96)
+      self.conv_block_z8 = ConvBlock(in_channels = 96, out_channels = 96)
+
+      self.conv_block_z9 = ConvBlock(in_channels = 96, out_channels = 128)
+      self.conv_block_z10 = ConvBlock(in_channels = 128, out_channels = 128, kernel_size = 2)
+      self.conv_block_z_last = ConvBlock(in_channels = 128, out_channels = 48, kernel_size = 1)
 
     def forward(self, inputs1, inputs2):
       x = torch.cat((inputs1, inputs2), 1)
@@ -95,15 +115,20 @@ class PlaceModel(nn.Module):
       x = self.conv_block5(x)
       x = self.conv_block6(x)
 
-      x = self.conv_block7(x)
-      x = self.conv_block8(x)
-
       x_r = self.conv_block_r1(x)
       x_r = self.conv_block_r2(x_r)
 
       x_r = self.conv_block_r3(x_r)
       x_r = self.conv_block_r4(x_r)
-      reward = self.conv_block_r5(x_r)
+      x_r = self.conv_block_r5(x_r)
+      x_r = self.conv_block_r6(x_r)
+
+      x_r = self.conv_block_r7(x_r)
+      x_r = self.conv_block_r8(x_r)
+
+      x_r = self.conv_block_r9(x_r)
+      x_r = self.conv_block_r10(x_r)
+      reward = self.conv_block_r_last(x_r)
       reward = self.sigmoid(reward)
 
       x = self.conv_block_z1(x)
@@ -112,8 +137,13 @@ class PlaceModel(nn.Module):
       x = self.conv_block_z3(x)
       x = self.conv_block_z4(x)
 
-      z = self.conv_block_z5(x)
-
+      x = self.conv_block_z5(x)
+      x = self.conv_block_z6(x)
+      x = self.conv_block_z7(x)
+      x = self.conv_block_z8(x)
+      x = self.conv_block_z9(x)
+      x = self.conv_block_z10(x)
+      z = self.conv_block_z_last(x)
 
       return z, reward
 
@@ -121,16 +151,21 @@ class PlaceModel(nn.Module):
 class MergeModel(nn.Module):
     def __init__(self, in_features):
       super().__init__()
-      self.linear_block1 = LinearBlock(in_features = in_features, out_features = 64)
-      self.linear_block2 = LinearBlock(in_features = 64, out_features = 64)
-      self.linear_block3 = LinearBlockRemoveWeightNorm(in_features = 64, out_features = 1)
+      self.sigmoid = nn.Sigmoid()
+
+      self.linear_block1 = LinearBlock(in_features = in_features, out_features = 128)
+      self.linear_block2 = LinearBlock(in_features = 128, out_features = 128)
+      self.linear_block3 = LinearBlock(in_features = 128, out_features = 64)
+      self.linear_block_r_last = nn.Linear(in_features = 64, out_features = 1)
 
     def forward(self, inputs):
       x = inputs[0] - inputs[1]
 
       x = self.linear_block1(x)
       x = self.linear_block2(x)
-      reward = self.linear_block3(x)
+      x = self.linear_block3(x)
+      reward = self.linear_block_r_last(x)
+      reward = self.sigmoid(reward)
 
       return reward
 

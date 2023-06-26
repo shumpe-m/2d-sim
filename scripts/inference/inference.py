@@ -8,11 +8,12 @@ import torch
 from torch.utils.data import ConcatDataset, DataLoader, Dataset
 from itertools import product
 import json
+# import matplotlib.pyplot as plt
 
 from inference.inference_utils import InferenceUtils
 from utils.param import SelectionMethod
 # from models.models import GraspModel, PlaceModel, MergeModel
-from models.models_sub import GraspModel, PlaceModel, MergeModel
+from models.models import GraspModel, PlaceModel, MergeModel
 
 
 class Inference(InferenceUtils):
@@ -29,8 +30,9 @@ class Inference(InferenceUtils):
       self.grasp_model = GraspModel(self.input_shape[2]).float()
       self.place_model = PlaceModel(self.input_shape[2]*2).float()
       self.merge_model = MergeModel(self.z_shape).float()
-
       self.previous_model_timestanp = ""
+      with open('./data/checkpoints/timestamp.txt', 'r') as f:
+         self.previous_model_timestanp = f.read()
       self.reload_model_weights()
 
    def reload_model_weights(self, lode_model = True):
@@ -60,16 +62,16 @@ class Inference(InferenceUtils):
       grasp_action = {}
       place_action = {}
       if method == SelectionMethod.Random:
-         dir = "./data/obj_info/obj_info" + str(episode) + ".json"
-         with open(dir, mode="rt", encoding="utf-8") as f:
-                     obj_infos = json.load(f)
-         pose = obj_infos["0"]["center_psoe"]
-         angle = obj_infos["0"]["angle"] if obj_infos["0"]["angle"] != None else np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])
+         # dir = "./data/obj_info/obj_info" + str(episode) + ".json"
+         # with open(dir, mode="rt", encoding="utf-8") as f:
+         #             obj_infos = json.load(f)
+         # pose = obj_infos["0"]["center_psoe"]
+         # angle = obj_infos["0"]["angle"] if obj_infos["0"]["angle"] != None else np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])
          grasp_action["index"] = int(np.random.choice(range(3)))
 
-         grasp_action["pose"] = [pose[0],
-                                 pose[1], # [m]
-                                 angle] # [rad]
+         grasp_action["pose"] = [np.random.uniform(self.lower_random_pose[0], self.upper_random_pose[0]),  # [m]
+                                 np.random.uniform(self.lower_random_pose[1], self.upper_random_pose[1]),  # [m]
+                                 np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])] 
          grasp_action["estimated_reward"] = -1
          grasp_action["step"] = 0
 
@@ -90,6 +92,14 @@ class Inference(InferenceUtils):
       input_images = self.get_images(images)
       goal_input_images = self.get_images(goal_images)
       place_input_images = self.get_images(place_images)
+      # plt.show(block=False)
+      # plt.gca().axis("off")
+
+      # for i in range(16):
+      #    plt.imshow(input_images[i], cmap='gray')
+      #    plt.pause(1)
+      # plt.clf()
+      # plt.close()
 
       # print(np.array(grasp_input).shape)
       input_images = torch.tensor(input_images)
@@ -161,13 +171,13 @@ class Inference(InferenceUtils):
 
 
       grasp_action["index"] = int(g_index[3])
-      grasp_action["pose"] = self.pose_from_index(g_index, reward_g.shape, images[0])
+      grasp_action["pose"] = self.pose_from_index(g_index, reward_g.shape)
       grasp_action["estimated_reward"] = int(reward_g[tuple(g_index)])
       grasp_action["step"] = 0
 
 
       place_action["index"] = int(g_index[3])
-      place_action["pose"] = self.pose_from_index(p_index, reward_p.shape, images[0], resolution_factor=1.0)
+      place_action["pose"] = self.pose_from_index(p_index, reward_p.shape, resolution_factor=1.0)
       place_action["estimated_reward"] = int(reward[index_unraveled])
       place_action["step"] = 0
    

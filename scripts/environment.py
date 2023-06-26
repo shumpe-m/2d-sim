@@ -50,7 +50,8 @@ class Environment:
 
       #  
       if image_state == "grasp":
-         path = path_dir.joinpath('obj_info/obj_info' + str(episode) + '.json')
+         # path = path_dir.joinpath('obj_info/obj_info' + str(episode) + '.json')
+         path = path_dir.joinpath('obj_info/obj_info.json')
          json_file = open(path, mode="w")
          json.dump(infos, json_file, ensure_ascii=False)
          json_file.close()
@@ -60,7 +61,8 @@ class Environment:
 
    def draw_object(self, rgb_img:np.array = None, depth_img:np.array = None, action:np.array = None, obj_info:list = None):
       if isinstance(obj_info,type(None)):
-         obj_form = self.obj_forms[np.random.randint(0, 2, 1)[0]]
+         # obj_form = self.obj_forms[np.random.randint(0, 2, 1)[0]]
+         obj_form = self.obj_forms[0]
          color = np.random.randint(0, 255, 3).tolist()
          depth = np.random.randint(40, 45, 1).tolist()
       else:
@@ -69,7 +71,7 @@ class Environment:
          depth = obj_info["depth"]
 
 
-      output = self.object_parameters(obj_form, action, obj_info)
+      output = self.object_pose(obj_form, action, obj_info)
 
 
       if obj_form == "rectangle":
@@ -101,7 +103,7 @@ class Environment:
       return rgb_img, depth_img, info
 
 
-   def object_parameters(self, obj_form, action=None, obj_info=None):
+   def object_pose(self, obj_form, action=None, obj_info=None):
       pose_range = np.array([self.rgb_size[1], self.rgb_size[0]]) - np.array([self.size_range[1], self.size_range[1]])
 
       if obj_form == "rectangle":
@@ -139,7 +141,6 @@ class Environment:
             obj_cpose += np.array([self.size_range[1]/2, self.size_range[1]/2])
          else:
             obj_cpose = np.array(action[:2])
-            # angle = action[2]
 
          return obj_cpose.astype(np.int64), obj_size
 
@@ -154,13 +155,3 @@ if __name__ == "__main__":
    env = Environment(size = (752, 480))
    # output=env.plot_env(episode = episode, num_obj = 3, image_state = "grasp")
    # print(output[0].shape)
-
-   dir = './data/obj_info/obj_info' + str(episode) + '.json'
-   encoding = "utf-8"
-   with open(dir, mode="rt", encoding="utf-8") as f:
-      data = json.load(f)
-   pose_range = np.array([480, 752]) - np.array([70, 120])
-   # obj_cpose = np.multiply(np.random.rand(2), pose_range)
-   obj_cpose = np.array([480/2, 752/2])
-   print(len(data))
-   env.plot_env(episode = episode, num_obj = 1, image_state = "place_a", action=obj_cpose, obj_info = data["0"])

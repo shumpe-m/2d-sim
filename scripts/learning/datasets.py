@@ -14,13 +14,13 @@ class CustomDataset():
    def __init__(self, episodes, seed=None):
       super().__init__()
       self.keys = list(episodes.keys())
-      self.keys = self.keys[-13000:]
+      self.keys = self.keys[-2000:]
       self.episodes_place_success_index = []
       self.episodes = {}
       for key in self.keys:
          self.episodes[key] = episodes[key]
          if self.episodes[key]['place']['reward'] > 0:
-            self.episodes_place_success_index.append(int(key))
+            self.episodes_place_success_index.append(self.keys.index(key))
 
 
 
@@ -224,31 +224,10 @@ class CustomDataset():
       return r
 
    def get_data(self):
-      imgs_g = torch.empty(0)
-      imgs_p = torch.empty(0)
-      imgs_m = torch.empty(0)
-      rewards = torch.empty(0)
-      index = torch.empty(0)
-      weights = torch.empty(0)
-      
       data = []
-      # imgs = []
-      # label = []
       for key in self.keys:
          r = self.torch_generator(key)
          for b_dx in range(r[0].shape[0]):
-            # imgs.append((r[0][b_dx], r[1][b_dx], r[2][b_dx]))
-            # label.append((r[3][b_dx], r[4][b_dx], r[5][b_dx]))
             data.append(((r[0][b_dx], r[1][b_dx], r[2][b_dx]), (r[3][b_dx], r[4][b_dx], r[5][b_dx])))
-
-         # imgs_g = torch.cat((imgs_g, r[0]), dim=0)
-         # imgs_p = torch.cat((imgs_p, r[1]), dim=0)
-         # imgs_m = torch.cat((imgs_m, r[2]), dim=0)
-         # rewards = torch.cat((rewards, r[3]), dim=0)
-         # index = torch.cat((index, r[4]), dim=0)
-         # weights = torch.cat((weights, r[5]), dim=0)
-         # imgs.append([imgs_g, imgs_p, imgs_m])
-         # label.append([rewards, index, weights])
-      # print("***********",len(imgs))
 
       return data

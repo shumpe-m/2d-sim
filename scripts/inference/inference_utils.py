@@ -29,7 +29,7 @@ class InferenceUtils:
       self.upper_random_pose = upper_random_pose
 
    # TODO
-   def pose_from_index(self, index, index_shape, example_image, resolution_factor=2.0):
+   def pose_from_index(self, index, index_shape, resolution_factor=2.0):
       # x = -((index[1] + 0.5) - index_shape[1]/2) * resolution_factor * self.scale_factors[0]
       # y = -((index[2] + 0.5) - index_shape[2]/2) * resolution_factor * self.scale_factors[1]
 
