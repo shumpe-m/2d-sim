@@ -1,6 +1,4 @@
-scripts/data/checkpoints/
 scripts/data/datasets/
-scripts/data/goal/
 scripts/data/heatmaps/
 scripts/data/img/
 scripts/data/logs/
