@@ -54,7 +54,7 @@ class Train:
       train_dataloaders = DataLoader(train_dataset, 
                                     batch_size=train_batch_size,
                                     shuffle=True,
-                                    num_workers=4, 
+                                    num_workers=2, 
                                     drop_last=True,
                                     pin_memory=True
                                     )
@@ -62,7 +62,7 @@ class Train:
       val_dataloader = DataLoader(val_dataset, 
                                  batch_size=validation_batch_size,
                                  shuffle=True,
-                                 num_workers=4,
+                                 num_workers=2,
                                  drop_last=False,
                                  pin_memory=True)
 
