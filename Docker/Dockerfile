@@ -47,4 +47,10 @@ RUN pip3 install \
     tensorboard \
     loguru
 
-RUN echo "cd /root/2D-sim" >> ~/.bashrc
+RUN echo "cd /root/2D-sim/scripts" >> ~/.bashrc
+ENV PYTHONPATH="/root/2D-sim/scripts:$PYTHONPATH"
+
+
+
+
+

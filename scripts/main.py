@@ -24,7 +24,7 @@ class SelfLearning(Environment):
       self.inference = Inference()
       self.grasp_decision = GraspDecision()
       self.load_model_args =  [] # train
-      self.episode = 3229
+      self.episode = 7123
       self.image_states = ["grasp", "place_b", "goal", "place_a"]
       self.percentage_secondary = 0.0
       self.primary_selection_method = SelectionMethod.Max
@@ -101,7 +101,7 @@ class SelfLearning(Environment):
          self.episode += 1
          time.sleep(1)
 
-   def retrain_model(self) -> None:
+   def retrain_model(self):
       cmd = '/root/2D-sim/scripts/learning/train.py'
       process = Popen(["python3", cmd] + self.load_model_args)
       process.communicate()
