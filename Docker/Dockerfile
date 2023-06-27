@@ -45,6 +45,7 @@ RUN pip3 install \
     opencv-python \
     matplotlib \
     tensorboard \
+    scikit-learn \
     loguru
 
 RUN echo "cd /root/2D-sim/scripts" >> ~/.bashrc

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import argparse
 import datetime
+import time
 
 import numpy as np
 import torch
@@ -16,64 +17,73 @@ from models.models import GraspModel, PlaceModel, MergeModel, Combined_model
 from learning.datasets import CustomDataset
 from learning.metrics import Losses
 
-def parse_args():
-   parser = argparse.ArgumentParser(description='Training pipeline for pick-and-place.')
-   parser.add_argument('-i', '--image_format', action='store', dest='image_format', type=str, default='png')
-   parser.add_argument('-p', '--path', action='store', dest='data_path', type=str, default="/root/2D-sim/scripts/data")
-   parser.add_argument('-m', '--load_model', action='store_true', dest='load_model')
+# def parse_args():
+#    parser = argparse.ArgumentParser(description='Training pipeline for pick-and-place.')
+#    parser.add_argument('-i', '--image_format', action='store', dest='image_format', type=str, default='png')
+#    parser.add_argument('-p', '--path', action='store', dest='data_path', type=str, default="/root/2D-sim/scripts/data")
+#    parser.add_argument('-m', '--load_model', action='store_true', dest='load_model')
 
-   args = parser.parse_args()
-   return args 
+#    args = parser.parse_args()
+#    return args 
 
 class Train:
-   def __init__(self, data_path=None, image_format='png', load_model=True):
-      input_shape = [None, None, 1] if True else [None, None, 3]
-      z_shape = 48
-      train_batch_size = 1024
-      validation_batch_size = 1024
-      number_primitives = 4
-      percent_validation_set = 0.2
+   def __init__(self, data_path=None, image_format='png'):
+      self.input_shape = [None, None, 1] if True else [None, None, 3]
+      self.z_shape = 48
+      self.train_batch_size = 1024
+      self.validation_batch_size = 256
+      self.percent_validation_set = 0.2
       self.device = "cuda" if torch.cuda.is_available() else "cpu"
       torch.manual_seed(0)
 
       # self.writer = SummaryWriter(log_dir='/root/2D-sim/scripts/data/logs/pick2place')
       # previous_log_data = SummaryReader(log_dir='./data/logs/log')
       self.previous_epoch = 0
-      dataset_path = data_path + "/datasets/datasets.json"
-      
-      # get dataset
-      with open(dataset_path, mode="rt", encoding="utf-8") as f:
-         all_data = json.load(f)
+      self.dataset_path = data_path + "/datasets/datasets.json"
 
+      with open('./data/datasets/tensor.pkl', 'rb') as f:
+         self.dataset_tensor = pickle.load(f)
+
+   def run(self, load_model=True):
+      time_data = {}
+      with open("./data/datasets/learning_time.json", mode="rt", encoding="utf-8") as f:
+         time_data = json.load(f)
+      start = time.time()
+
+      # get dataset
+      start = time.time()
+      with open(self.dataset_path, mode="rt", encoding="utf-8") as f:
+         all_data = json.load(f)
       custom_ds = CustomDataset(all_data, seed=42)
-      datasets = custom_ds.get_data()
-      datasets_length =len(datasets)
-      val_data_length = int(datasets_length * percent_validation_set)
+      datasets = custom_ds.get_data(self.dataset_tensor)
+      datasets_length = len(datasets)
+      val_data_length = int(datasets_length * self.percent_validation_set)
       train_data_length = datasets_length - val_data_length
       train_dataset, val_dataset = torch.utils.data.random_split(datasets, [train_data_length, val_data_length])
 
       train_dataloaders = DataLoader(train_dataset, 
-                                    batch_size=train_batch_size,
+                                    batch_size=self.train_batch_size,
                                     shuffle=True,
                                     num_workers=2, 
-                                    drop_last=True,
+                                    drop_last=False,
                                     pin_memory=True
                                     )
 
       val_dataloader = DataLoader(val_dataset, 
-                                 batch_size=validation_batch_size,
+                                 batch_size=self.validation_batch_size,
                                  shuffle=True,
                                  num_workers=2,
                                  drop_last=False,
                                  pin_memory=True)
-      
-      # with open('./data/datasets/dataset.npy', 'wb') as file:
-      #    pickle.dump(datasets, file)
+      dataset_time = time.time() - start
+      self.dataset_tensor = datasets
+      with open('./data/datasets/tensor.pkl', 'wb') as f:
+         pickle.dump(datasets, f)
 
       # set up nn model
-      grasp_model = GraspModel(input_shape[2]).to(self.device)
-      place_model = PlaceModel(input_shape[2]*2).to(self.device)
-      merge_model = MergeModel(z_shape).to(self.device)
+      grasp_model = GraspModel(self.input_shape[2]).to(self.device)
+      place_model = PlaceModel(self.input_shape[2]*2).to(self.device)
+      merge_model = MergeModel(self.z_shape).to(self.device)
       model = Combined_model(grasp_model, place_model, merge_model).to(self.device)
 
       # optimizer
@@ -109,14 +119,22 @@ class Train:
          model.load_state_dict(stdict_m)
          optimizer.load_state_dict(stdict_o)
 
+      start = time.time()
       self.train(train_dataloaders, model, criterion, optimizer)
-      
+      train_time = time.time() - start
+
+      start = time.time()
       self.test(val_dataloader, model, criterion, optimizer)
+      val_time = time.time() - start
 
+      time_data[str(len(time_data))] = [dataset_time, train_time, val_time]
+      json_file = open('./data/datasets/learning_time.json', mode="w")
+      json.dump(time_data, json_file, ensure_ascii=False)
+      json_file.close()
       # self.writer.close()
-      print("train_end \n")
+      print("train_end ")
 
-
+      # print("dataset_time", dataset_time)
 
    def train(self, dataloader, model, loss_fn, optimizer):
       size = len(dataloader.dataset)
@@ -175,13 +193,13 @@ class Train:
       # correct /= size
       print(f"Avg loss: {test_loss:>8f}")
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     
 
-    args = parse_args()
+#     args = parse_args()
 
-    train = Train(
-        image_format=args.image_format,
-        data_path=args.data_path,
-        load_model=args.load_model
-    )
+#     train = Train(
+#         image_format=args.image_format,
+#         data_path=args.data_path,
+#         load_model=args.load_model
+#     )

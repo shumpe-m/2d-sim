@@ -3,6 +3,7 @@ from loguru import logger
 import numpy as np
 import copy
 import random
+import pickle
 
 import torch
 from torch.utils.data import Dataset
@@ -14,7 +15,7 @@ class CustomDataset():
    def __init__(self, episodes, seed=None):
       super().__init__()
       self.keys = list(episodes.keys())
-      self.keys = self.keys[-1024:]
+      self.keys = self.keys[-13000:]
       self.episodes_place_success_index = []
       self.episodes = {}
       for key in self.keys:
@@ -223,10 +224,18 @@ class CustomDataset():
       r = tuple(torch.from_numpy(arr) for arr in r)
       return r
 
-   def get_data(self):
-      data = []
-      for key in self.keys:
-         r = self.torch_generator(key)
+   def get_data(self, data):
+      while len(data) > 36000:
+         data.pop(0)
+
+      if len(data) == 0:
+         for key in self.keys:
+            r = self.torch_generator(key)
+            for b_dx in range(r[0].shape[0]):
+               data.append(((r[0][b_dx], r[1][b_dx], r[2][b_dx]), (r[3][b_dx], r[4][b_dx], r[5][b_dx])))
+
+      else:
+         r = self.torch_generator(self.keys[-1])
          for b_dx in range(r[0].shape[0]):
             data.append(((r[0][b_dx], r[1][b_dx], r[2][b_dx]), (r[3][b_dx], r[4][b_dx], r[5][b_dx])))
 

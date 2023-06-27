@@ -8,6 +8,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import json
+import pickle
 from pathlib import Path
 
 from learning.train import Train
@@ -24,7 +25,7 @@ class SelfLearning(Environment):
       super().__init__()
       self.inference = Inference()
       self.grasp_decision = GraspDecision()
-      self.load_model_args =  False
+      self.load_train_model =  False
       self.episode = 0
       self.image_states = ["grasp", "place_b", "goal", "place_a"]
       self.percentage_secondary = 0.0
@@ -32,13 +33,30 @@ class SelfLearning(Environment):
       self.secondary_selection_method = SelectionMethod.Prob
       self.previous_model_timestanp=""
 
+      if self.episode < 5:
+         # initialize
+         datasets = []
+         with open('./data/datasets/tensor.pkl', 'wb') as f:
+            pickle.dump(datasets, f)
+         ini_t = {}
+         json_file = open('./data/datasets/learning_time.json', mode="w")
+         json.dump(ini_t, json_file, ensure_ascii=False)
+         json_file.close()
+
+      self.train = Train(
+         image_format="png",
+         data_path="/root/2D-sim/scripts/data"
+      )
+
    def manipulate(self):
       data = {}
+      time_data = {}
       path = './data/datasets/datasets' + '' + '.json'
       if self.episode > 0:
          with open(path, mode="rt", encoding="utf-8") as f:
             data = json.load(f)
       while self.episode < 100000:
+         start = time.time()
          print(self.episode)
          if self.episode < 50:
             method = SelectionMethod.Random
@@ -96,14 +114,24 @@ class SelfLearning(Environment):
 
          # learning
          if self.episode > 10:
-            self.load_model_args = True
-
+            self.load_train_model = True
+         m_time = time.time() - start
+         
+         start = time.time()
          if self.episode > 5:
-            train = Train(
-               image_format="png",
-               data_path="/root/2D-sim/scripts/data",
-               load_model=self.load_model_args
-            )
+            self.train.run(self.load_train_model)
+
+         l_time = time.time() - start
+
+         t_data = [m_time, l_time]
+         time_data[str(self.episode)] = t_data
+         json_file = open('./data/datasets/main_time.json', mode="w")
+         json.dump(time_data, json_file, ensure_ascii=False)
+         json_file.close()
+
+         print("manipulate_time", m_time)
+         print("learning_time", l_time)
+         print("\n")
 
          self.episode += 1
 
