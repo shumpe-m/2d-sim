@@ -30,7 +30,7 @@ class Train:
    def __init__(self, data_path=None, image_format='png'):
       self.input_shape = [None, None, 1] if True else [None, None, 3]
       self.z_shape = 48
-      self.train_batch_size = 1024
+      self.train_batch_size = 512
       self.validation_batch_size = 256
       self.percent_validation_set = 0.2
       self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -48,7 +48,6 @@ class Train:
       time_data = {}
       with open("./data/datasets/learning_time.json", mode="rt", encoding="utf-8") as f:
          time_data = json.load(f)
-      start = time.time()
 
       # get dataset
       start = time.time()
@@ -75,11 +74,12 @@ class Train:
                                  num_workers=2,
                                  drop_last=False,
                                  pin_memory=True)
-      dataset_time = time.time() - start
       self.dataset_tensor = datasets
       with open('./data/datasets/tensor.pkl', 'wb') as f:
          pickle.dump(datasets, f)
+      dataset_time = time.time() - start
 
+      start = time.time()
       # set up nn model
       grasp_model = GraspModel(self.input_shape[2]).to(self.device)
       place_model = PlaceModel(self.input_shape[2]*2).to(self.device)
@@ -118,6 +118,7 @@ class Train:
          stdict_o = cpt['opt_state_dict']
          model.load_state_dict(stdict_m)
          optimizer.load_state_dict(stdict_o)
+      model_time = time.time() - start
 
       start = time.time()
       self.train(train_dataloaders, model, criterion, optimizer)
@@ -127,7 +128,7 @@ class Train:
       self.test(val_dataloader, model, criterion, optimizer)
       val_time = time.time() - start
 
-      time_data[str(len(time_data))] = [dataset_time, train_time, val_time]
+      time_data[str(len(time_data))] = [dataset_time, train_time, val_time, model_time]
       json_file = open('./data/datasets/learning_time.json', mode="w")
       json.dump(time_data, json_file, ensure_ascii=False)
       json_file.close()
@@ -144,7 +145,8 @@ class Train:
          x = tuple(torch.reshape(x_arr, (-1, 1, 32, 32)).to(self.device) for x_arr in x)
          y = tuple(torch.reshape(y_arr, (-1, 3)).to(self.device) for y_arr in y)
          y = torch.cat([y[0], y[1], y[2]], dim=1).view(-1, 3, 3)
-
+         if x[0].shape[0] == 1:
+            break
          z_g, reward_g, z_p, reward_p, reward = model(x[0],x[1],x[2])
          pred = torch.cat([reward_g, reward_p, reward], dim=1)
          loss = loss_fn.binary_crossentropy(pred, y)
@@ -182,6 +184,8 @@ class Train:
       test_loss, correct = 0, 0
       with torch.no_grad():
          for x, y in dataloader:
+            if x[0].shape[0] == 1:
+               break
             x = tuple(torch.reshape(x_arr, (-1, 1, 32, 32)).to(self.device) for x_arr in x)
             y = tuple(torch.reshape(y_arr, (-1, 3)).to(self.device) for y_arr in y)
             y = torch.cat([y[0], y[1], y[2]], dim=1).view(-1, 3, 3)

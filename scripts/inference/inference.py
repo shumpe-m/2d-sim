@@ -120,7 +120,7 @@ class Inference(InferenceUtils):
       reward_g = torch.permute(reward_g, (0, 2, 3, 1)).float()
       reward_p = torch.permute(reward_p, (0, 2, 3, 1)).float()
 
-      first_method = SelectionMethod.PowerProb if method in [SelectionMethod.Top5, SelectionMethod.Max] else method
+      first_method = SelectionMethod.Prob if method in [SelectionMethod.Top5, SelectionMethod.Max] else method
 
       filter_lambda_n_grasp = self.get_filter_n(first_method, self.number_top_grasp)
       filter_lambda_n_place = self.get_filter_n(first_method, self.number_top_place)

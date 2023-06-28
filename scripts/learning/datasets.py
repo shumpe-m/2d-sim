@@ -225,7 +225,7 @@ class CustomDataset():
       return r
 
    def get_data(self, data):
-      while len(data) > 36000:
+      while len(data) > 20000:
          data.pop(0)
 
       if len(data) == 0:

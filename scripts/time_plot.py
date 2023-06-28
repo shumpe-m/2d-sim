@@ -29,7 +29,7 @@ for t in range(len(learning_time_data)):
    learning_data.append(learning_time_data[str(t)])
    learning_num.append(t)
 
-x = np.arange(10000)
+x = np.arange(6700)
 
 ###########################
 
@@ -58,12 +58,17 @@ ep2 = "y = " + str(model_lr2.coef_[0,0]) + "x + " + str(model_lr2.intercept_[0])
 model_lr3 = LinearRegression()
 model_lr3.fit(np.array([learning_num]).reshape(-1, 1), learning_data_np[:,2].reshape(-1, 1))
 ep3 = "y = " + str(model_lr3.coef_[0,0]) + "x + " + str(model_lr3.intercept_[0])
+model_lr4 = LinearRegression()
+model_lr4.fit(np.array([learning_num]).reshape(-1, 1), learning_data_np[:,3].reshape(-1, 1))
+ep4 = "y = " + str(model_lr4.coef_[0,0]) + "x + " + str(model_lr4.intercept_[0])
 
 plt.plot(learning_num, learning_data_np[:,0], 'o', label="creatate_dataset")
 plt.plot(learning_num, learning_data_np[:,1], 'o', label="training")
 plt.plot(learning_num, learning_data_np[:,2], 'o', label="validation")
+plt.plot(learning_num, learning_data_np[:,3], 'o', label="model set up")
 plt.plot(x.reshape(-1, 1), model_lr1.predict(x.reshape(-1, 1)), linestyle="solid", label=ep1)
 plt.plot(x.reshape(-1, 1), model_lr2.predict(x.reshape(-1, 1)), linestyle="solid", label=ep2)
 plt.plot(x.reshape(-1, 1), model_lr3.predict(x.reshape(-1, 1)), linestyle="solid", label=ep3)
+plt.plot(x.reshape(-1, 1), model_lr4.predict(x.reshape(-1, 1)), linestyle="solid", label=ep4)
 plt.legend()
 plt.show()
