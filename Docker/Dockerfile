@@ -46,6 +46,7 @@ RUN pip3 install \
     matplotlib \
     tensorboard \
     scikit-learn \
+    seaborn \
     loguru
 
 RUN echo "cd /root/2D-sim/scripts" >> ~/.bashrc

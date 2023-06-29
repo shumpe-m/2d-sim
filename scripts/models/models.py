@@ -30,7 +30,7 @@ class GraspModel(nn.Module):
    
       self.conv_block_z5 = ConvBlock(in_channels = 96, out_channels = 128)
       self.conv_block_z6 = ConvBlock(in_channels = 128, out_channels = 128, kernel_size = 2)
-      self.conv_block_z_last = ConvBlock(in_channels = 128, out_channels = 48, kernel_size = 1)
+      self.conv_block_z_last = nn.Conv2d(in_channels = 128, out_channels = 48, kernel_size = 1)
 
     def forward(self, inputs):
       x = self.conv_block1(inputs)
@@ -102,7 +102,7 @@ class PlaceModel(nn.Module):
 
       self.conv_block_z9 = ConvBlock(in_channels = 96, out_channels = 128)
       self.conv_block_z10 = ConvBlock(in_channels = 128, out_channels = 128, kernel_size = 2)
-      self.conv_block_z_last = ConvBlock(in_channels = 128, out_channels = 48, kernel_size = 1)
+      self.conv_block_z_last = nn.Conv2d(in_channels = 128, out_channels = 48, kernel_size = 1)
 
     def forward(self, inputs1, inputs2):
       x = torch.cat((inputs1, inputs2), 1)
