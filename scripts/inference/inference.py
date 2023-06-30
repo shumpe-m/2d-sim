@@ -27,9 +27,10 @@ class Inference(InferenceUtils):
       self.input_shape = [None, None, 1] if True else [None, None, 3]
       self.z_shape = 48
       # TODO:load model
-      self.grasp_model = GraspModel(self.input_shape[2]).float()
-      self.place_model = PlaceModel(self.input_shape[2]*2).float()
-      self.merge_model = MergeModel(self.z_shape).float()
+      self.device = "cuda" if torch.cuda.is_available() else "cpu"
+      self.grasp_model = GraspModel(self.input_shape[2]).float().to(self.device)
+      self.place_model = PlaceModel(self.input_shape[2]*2).float().to(self.device)
+      self.merge_model = MergeModel(self.z_shape).float().to(self.device)
       self.previous_model_timestanp = ""
       with open('./data/checkpoints/timestamp.txt', 'r') as f:
          self.previous_model_timestanp = f.read()
@@ -57,7 +58,6 @@ class Inference(InferenceUtils):
          episode = None,
       ):
       self.reload_model_weights()
-      start = time.time()
       actions = {}
       grasp_action = {}
       place_action = {}
@@ -102,11 +102,11 @@ class Inference(InferenceUtils):
       # plt.close()
 
       # print(np.array(grasp_input).shape)
-      input_images = torch.tensor(input_images)
+      input_images = torch.tensor(input_images).to(self.device)
       input_images = torch.permute(input_images, (0, 3, 1, 2)).float()
-      goal_input_images = torch.tensor(goal_input_images)
+      goal_input_images = torch.tensor(goal_input_images).to(self.device)
       goal_input_images = torch.permute(goal_input_images, (0, 3, 1, 2)).float()
-      place_input_images = torch.tensor(place_input_images)
+      place_input_images = torch.tensor(place_input_images).to(self.device)
       place_input_images = torch.permute(place_input_images, (0, 3, 1, 2)).float()
 
       self.grasp_model.eval()
@@ -143,9 +143,9 @@ class Inference(InferenceUtils):
       # best_index1 = None
       # best_index2 = None
       # best_output = None
-      rewards = torch.empty(0)
+      rewards = torch.empty(0).to(self.device)
       for batch_data1, batch_data2, batch_indices1, batch_indices2 in dataloader:
-         reward = self.merge_model([batch_data1, batch_data2])
+         reward = self.merge_model([batch_data1.to(self.device), batch_data2.to(self.device)])
          rewards = torch.cat((rewards, torch.unsqueeze(reward, dim=0)), dim=0)
          # max_outputs, max_indices = torch.max(reward, dim=0)
          # if best_output is None or max_outputs > best_output:

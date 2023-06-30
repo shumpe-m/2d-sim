@@ -31,7 +31,7 @@ class Train:
       self.input_shape = [None, None, 1] if True else [None, None, 3]
       self.z_shape = 48
       self.train_batch_size = 512
-      self.validation_batch_size = 256
+      self.validation_batch_size = 512
       self.percent_validation_set = 0.2
       self.device = "cuda" if torch.cuda.is_available() else "cpu"
       torch.manual_seed(0)

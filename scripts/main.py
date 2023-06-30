@@ -26,7 +26,7 @@ class SelfLearning(Environment):
       self.inference = Inference()
       self.grasp_decision = GraspDecision()
       self.load_train_model =  False
-      self.episode = 0
+      self.episode = 2123
       self.image_states = ["grasp", "place_b", "goal", "place_a"]
       self.percentage_secondary = 0.0
       self.primary_selection_method = SelectionMethod.Max
@@ -55,6 +55,7 @@ class SelfLearning(Environment):
       if self.episode > 0:
          with open(path, mode="rt", encoding="utf-8") as f:
             data = json.load(f)
+
       while self.episode < 100000:
          start = time.time()
          print(self.episode)
