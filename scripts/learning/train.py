@@ -1,48 +1,34 @@
 #!/usr/bin/python3
-import argparse
 import datetime
 import time
+import json
+import pickle
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-import json
-import pickle
 
-# from models.models import GraspModel, PlaceModel, MergeModel, Combined_model
 from models.models import GraspModel, PlaceModel, MergeModel, Combined_model
 from learning.datasets import CustomDataset
 from learning.metrics import Losses
 
-# def parse_args():
-#    parser = argparse.ArgumentParser(description='Training pipeline for pick-and-place.')
-#    parser.add_argument('-i', '--image_format', action='store', dest='image_format', type=str, default='png')
-#    parser.add_argument('-p', '--path', action='store', dest='data_path', type=str, default="/root/2D-sim/scripts/data")
-#    parser.add_argument('-m', '--load_model', action='store_true', dest='load_model')
-
-#    args = parser.parse_args()
-#    return args 
 
 class Train:
-   def __init__(self, data_path=None, image_format='png'):
+   def __init__(self, dataset_path=None, image_format='png'):
       self.input_shape = [None, None, 1] if True else [None, None, 3]
       self.z_shape = 48
       self.train_batch_size = 512
-      self.validation_batch_size = 512
+      self.validation_batch_size = 256
       self.percent_validation_set = 0.2
       self.device = "cuda" if torch.cuda.is_available() else "cpu"
       torch.manual_seed(0)
 
-      # self.writer = SummaryWriter(log_dir='/root/2D-sim/scripts/data/logs/pick2place')
-      # previous_log_data = SummaryReader(log_dir='./data/logs/log')
       self.previous_epoch = 0
-      self.dataset_path = data_path + "/datasets/datasets.json"
+      self.dataset_path = dataset_path
 
-      with open('./data/datasets/tensor.pkl', 'rb') as f:
-         self.dataset_tensor = pickle.load(f)
+      self.dataset_tensor = []
 
    def run(self, load_model=True):
       time_data = {}
@@ -63,7 +49,7 @@ class Train:
       train_dataloaders = DataLoader(train_dataset, 
                                     batch_size=self.train_batch_size,
                                     shuffle=True,
-                                    num_workers=2, 
+                                    num_workers=0, 
                                     drop_last=False,
                                     pin_memory=True
                                     )
@@ -71,12 +57,11 @@ class Train:
       val_dataloader = DataLoader(val_dataset, 
                                  batch_size=self.validation_batch_size,
                                  shuffle=True,
-                                 num_workers=2,
+                                 num_workers=0,
                                  drop_last=False,
                                  pin_memory=True)
+                                 
       self.dataset_tensor = datasets
-      with open('./data/datasets/tensor.pkl', 'wb') as f:
-         pickle.dump(datasets, f)
       dataset_time = time.time() - start
 
       start = time.time()
@@ -132,10 +117,9 @@ class Train:
       json_file = open('./data/datasets/learning_time.json', mode="w")
       json.dump(time_data, json_file, ensure_ascii=False)
       json_file.close()
-      # self.writer.close()
-      print("train_end ")
 
-      # print("dataset_time", dataset_time)
+
+
 
    def train(self, dataloader, model, loss_fn, optimizer):
       size = len(dataloader.dataset)
@@ -158,12 +142,7 @@ class Train:
 
          losses.append(loss.item())
          train_loss += loss.item()
-         # accuracy += torch.sum(preds == labels).item() / len(labels)
 
-
-      # self.writer.add_scalar("loss", train_loss / len(dataloader), self.previous_epoch+1)
-      # self.writer.add_scalar("accuracy", accuracy / len(dataloader), epoch)     
-      # self.writer.add_scalar("lr", scheduler.get_lr()[0], self.previous_epoch+1)   
 
       outfile = '/root/2D-sim/scripts/data/checkpoints/out.cpt'
       torch.save({'combined_model_state_dict': model.state_dict(),
@@ -192,18 +171,6 @@ class Train:
 
             z_g, reward_g, z_p, reward_p, reward = model(x[0],x[1],x[2])
             test_loss += loss_fn.binary_crossentropy(torch.cat([reward_g, reward_p, reward], dim=1), y).item()
-            # correct += (torch.cat([reward_g, reward_p, reward], dim=1).argmax(1) == y).type(torch.float).sum().item()
+
       test_loss /= size
-      # correct /= size
       print(f"Avg loss: {test_loss:>8f}")
-
-# if __name__ == '__main__':
-    
-
-#     args = parse_args()
-
-#     train = Train(
-#         image_format=args.image_format,
-#         data_path=args.data_path,
-#         load_model=args.load_model
-#     )

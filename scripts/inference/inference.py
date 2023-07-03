@@ -1,18 +1,15 @@
 import time
 from typing import List
+import json
 
-import cv2
-# from loguru import logger
 import numpy as np
+import cv2
+from itertools import product
 import torch
 from torch.utils.data import ConcatDataset, DataLoader, Dataset
-from itertools import product
-import json
-# import matplotlib.pyplot as plt
 
 from inference.inference_utils import InferenceUtils
 from utils.param import SelectionMethod
-# from models.models import GraspModel, PlaceModel, MergeModel
 from models.models import GraspModel, PlaceModel, MergeModel
 
 
@@ -26,15 +23,16 @@ class Inference(InferenceUtils):
       self.number_top_place = 200
       self.input_shape = [None, None, 1] if True else [None, None, 3]
       self.z_shape = 48
-      # TODO:load model
+
+      # load model
       self.device = "cuda" if torch.cuda.is_available() else "cpu"
       self.grasp_model = GraspModel(self.input_shape[2]).float().to(self.device)
       self.place_model = PlaceModel(self.input_shape[2]*2).float().to(self.device)
       self.merge_model = MergeModel(self.z_shape).float().to(self.device)
-      self.previous_model_timestanp = ""
       with open('./data/checkpoints/timestamp.txt', 'r') as f:
          self.previous_model_timestanp = f.read()
       self.reload_model_weights()
+
 
    def reload_model_weights(self, lode_model = True):
       with open('./data/checkpoints/timestamp.txt', 'r') as f:
@@ -45,30 +43,22 @@ class Inference(InferenceUtils):
          self.grasp_model.load_state_dict(cpt['grasp_model_state_dict'])
          self.place_model.load_state_dict(cpt['place_model_state_dict'])
          self.merge_model.load_state_dict(cpt['merge_model_state_dict'])
-
       self.previous_model_timestanp = saved_timestamp
+
 
    def infer(
          self,
          images,
          goal_images,
          method: SelectionMethod,
-         verbose=1,
          place_images = None,
-         episode = None,
       ):
       self.reload_model_weights()
       actions = {}
       grasp_action = {}
       place_action = {}
       if method == SelectionMethod.Random:
-         # dir = "./data/obj_info/obj_info" + str(episode) + ".json"
-         # with open(dir, mode="rt", encoding="utf-8") as f:
-         #             obj_infos = json.load(f)
-         # pose = obj_infos["0"]["center_psoe"]
-         # angle = obj_infos["0"]["angle"] if obj_infos["0"]["angle"] != None else np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])
          grasp_action["index"] = int(np.random.choice(range(3)))
-
          grasp_action["pose"] = [np.random.uniform(self.lower_random_pose[0], self.upper_random_pose[0]),  # [m]
                                  np.random.uniform(self.lower_random_pose[1], self.upper_random_pose[1]),  # [m]
                                  np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])] 
@@ -84,24 +74,14 @@ class Inference(InferenceUtils):
 
          actions["grasp"] = grasp_action
          actions["place"] = place_action
+
          return actions
 
-      # input_images = [self.get_images(i) for i in images]
-      # goal_input_images = [self.get_images(i) for i in goal_images]
-      # place_input_images = [self.get_images(i) for i in place_images]
+
       input_images = self.get_images(images)
       goal_input_images = self.get_images(goal_images)
       place_input_images = self.get_images(place_images)
-      # plt.show(block=False)
-      # plt.gca().axis("off")
 
-      # for i in range(16):
-      #    plt.imshow(input_images[i], cmap='gray')
-      #    plt.pause(1)
-      # plt.clf()
-      # plt.close()
-
-      # print(np.array(grasp_input).shape)
       input_images = torch.tensor(input_images).to(self.device)
       input_images = torch.permute(input_images, (0, 3, 1, 2)).float()
       goal_input_images = torch.tensor(goal_input_images).to(self.device)
@@ -140,30 +120,21 @@ class Inference(InferenceUtils):
       combined_dataset = CombinedDataset(g_top_z, p_top_z)
       dataloader = DataLoader(combined_dataset, batch_size=200, shuffle=False)
 
-      # best_index1 = None
-      # best_index2 = None
-      # best_output = None
+
       rewards = torch.empty(0).to(self.device)
       for batch_data1, batch_data2, batch_indices1, batch_indices2 in dataloader:
          reward = self.merge_model([batch_data1.to(self.device), batch_data2.to(self.device)])
          rewards = torch.cat((rewards, torch.unsqueeze(reward, dim=0)), dim=0)
-         # max_outputs, max_indices = torch.max(reward, dim=0)
-         # if best_output is None or max_outputs > best_output:
-         #    best_output = max_outputs
-         #    best_index1 = batch_indices1[max_indices]
-         #    best_index2 = batch_indices1[max_indices]
       reward = rewards.to('cpu').detach().numpy().copy()
-
       
       g_toreward_p = np_reward_g[g_top_index_unraveled[:, 0], g_top_index_unraveled[:, 1], g_top_index_unraveled[:, 2], g_top_index_unraveled[:, 3]]
       g_toreward_p_repeated = np.repeat(np.expand_dims(np.expand_dims(g_toreward_p, axis=1), axis=1), self.number_top_place, axis=1)
 
       filter_measure = reward * g_toreward_p_repeated
 
-
       filter_lambda = self.get_filter(method)
       index_raveled = filter_lambda(filter_measure)
-      # print(index_raveled)
+
 
       index_unraveled = np.unravel_index(index_raveled, reward.shape)
       g_index = g_top_index_unraveled[index_unraveled[0]]
@@ -181,8 +152,6 @@ class Inference(InferenceUtils):
       place_action["estimated_reward"] = int(reward[index_unraveled])
       place_action["step"] = 0
    
-      # if verbose:
-      #    logger.info(f'NN inference time [s]: {time.time() - start:.3}')
       actions["grasp"] = grasp_action
       actions["place"] = place_action
       return actions

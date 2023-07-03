@@ -12,8 +12,6 @@ class InferenceUtils:
                input_uncertainty=False,
                with_types=False,
    ):
-
-
       self.size_input = (480, 752)
       self.size_original_cropped = (200, 200)
       self.size_output = (32, 32)
@@ -28,16 +26,14 @@ class InferenceUtils:
       self.lower_random_pose = lower_random_pose
       self.upper_random_pose = upper_random_pose
 
-   # TODO
-   def pose_from_index(self, index, index_shape, resolution_factor=2.0):
-      # x = -((index[1] + 0.5) - index_shape[1]/2) * resolution_factor * self.scale_factors[0]
-      # y = -((index[2] + 0.5) - index_shape[2]/2) * resolution_factor * self.scale_factors[1]
 
+   def pose_from_index(self, index, index_shape, resolution_factor=2.0):
       x = (index[1] + 0.5) * resolution_factor * self.scale_factors[0]
       y = (index[2] + 0.5) * resolution_factor * self.scale_factors[1]
       a = -self.a_space[index[0]]  # [rad]
 
       return [x, y, a]
+
 
    def get_images(self, orig_image):
       image = copy.deepcopy(orig_image)
