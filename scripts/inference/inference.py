@@ -38,7 +38,7 @@ class Inference(InferenceUtils):
       with open('./data/checkpoints/timestamp.txt', 'r') as f:
          saved_timestamp = f.read()
       if lode_model and self.previous_model_timestanp!=saved_timestamp:
-         cptfile = './data/checkpoints/out.cpt'
+         cptfile = './data/checkpoints/model.cpt'
          cpt = torch.load(cptfile)
          self.grasp_model.load_state_dict(cpt['grasp_model_state_dict'])
          self.place_model.load_state_dict(cpt['place_model_state_dict'])
@@ -77,6 +77,30 @@ class Inference(InferenceUtils):
 
          return actions
 
+      elif method == "oracle":
+         dir = "./data/obj_info/obj_info.json"
+         with open(dir, mode="rt", encoding="utf-8") as f:
+            obj_infos = json.load(f)
+         keys = list(obj_infos.keys())
+         obj_info = obj_infos[keys[-1]]
+         pose = obj_info["center_psoe"]
+         pose.append(obj_info["angle"])
+         grasp_action["index"] = int(np.random.choice(range(3)))
+         grasp_action["pose"] = pose
+         grasp_action["estimated_reward"] = -1
+         grasp_action["step"] = 0
+
+         place_action["index"] = int(np.random.choice(range(3)))
+         place_action["pose"] = [np.random.uniform(self.lower_random_pose[0], self.upper_random_pose[0]),  # [m]
+                                 np.random.uniform(self.lower_random_pose[1], self.upper_random_pose[1]),  # [m]
+                                 np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])]  # [rad]
+         place_action["estimated_reward"] = -1
+         place_action["step"] = 0
+
+         actions["grasp"] = grasp_action
+         actions["place"] = place_action
+
+         return actions
 
       input_images = self.get_images(images)
       goal_input_images = self.get_images(goal_images)

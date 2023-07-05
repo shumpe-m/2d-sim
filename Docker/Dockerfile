@@ -49,8 +49,8 @@ RUN pip3 install \
     seaborn \
     loguru
 
-RUN echo "cd /root/2D-sim/scripts" >> ~/.bashrc
-ENV PYTHONPATH="/root/2D-sim/scripts:$PYTHONPATH"
+RUN echo "cd /root/2d-sim/scripts" >> ~/.bashrc
+ENV PYTHONPATH="/root/2d-sim/scripts:$PYTHONPATH"
 
 
 

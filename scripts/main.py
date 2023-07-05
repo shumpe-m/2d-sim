@@ -33,6 +33,7 @@ class SelfLearning(Environment):
       self.secondary_selection_method = SelectionMethod.Prob
       self.previous_model_timestanp=""
       self.dataset_path = dataset_path
+      self.random = 300
       
       if previous_experience:
          with open(self.dataset_path, mode="rt", encoding="utf-8") as f:
@@ -63,11 +64,12 @@ class SelfLearning(Environment):
       while self.episode < 100000:
          start = time.time()
          print(self.episode)
-         if self.episode < 200:
+         if self.episode < self.random:
             method = SelectionMethod.Random
+            # method = "oracle"
          else:
             method = self.primary_selection_method if np.random.rand() > self.percentage_secondary else self.secondary_selection_method
-
+         # method = "oracle"
             
          # TODO: get camera images
 
@@ -113,12 +115,12 @@ class SelfLearning(Environment):
          json_file.close()
 
          # learning
-         if self.episode > 10:
+         if self.episode > self.random:
             self.load_train_model = True
          i_time = time.time() - start
          
          start = time.time()
-         if self.episode > 5:
+         if self.episode > self.random - 1:
             self.train.run(self.load_train_model)
 
          l_time = time.time() - start

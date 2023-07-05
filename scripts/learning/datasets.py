@@ -103,7 +103,7 @@ class CustomDataset():
       grasp_before = self.load_image(index, 'grasp')
       grasp_before_area = self.area_of_interest(grasp_before, grasp['pose'])
       # TODO: grasp width
-      grasp_index = 1
+      grasp_index = grasp['index']
 
       # Only single grasp
       if len(e) == 1:
