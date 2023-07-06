@@ -61,7 +61,7 @@ class SelfLearning(Environment):
       data = {}
       time_data = {}
 
-      while self.episode < 100000:
+      while self.episode < 12000:
          start = time.time()
          print(self.episode)
          if self.episode < self.random:
@@ -69,7 +69,7 @@ class SelfLearning(Environment):
             # method = "oracle"
          else:
             method = self.primary_selection_method if np.random.rand() > self.percentage_secondary else self.secondary_selection_method
-         # method = "oracle"
+         method = "oracle"
             
          # TODO: get camera images
 
@@ -114,26 +114,32 @@ class SelfLearning(Environment):
          json.dump(self.dataset, json_file, ensure_ascii=False)
          json_file.close()
 
-         # learning
-         if self.episode > self.random:
-            self.load_train_model = True
-         i_time = time.time() - start
-         
-         start = time.time()
-         if self.episode > self.random - 1:
-            self.train.run(self.load_train_model)
+         # # learning
+         # if self.episode > self.random:
+         #    self.load_train_model = True
+         # i_time = time.time() - start
+         # # init
+         # if self.episode % 100 == 0:
+         #    self.train = Train(
+         #       image_format="png",
+         #       dataset_path=self.dataset_path
+         #    )
 
-         l_time = time.time() - start
+         # start = time.time()
+         # if self.episode > self.random - 1:
+         #    self.train.run(self.load_train_model)
 
-         t_data = [i_time, l_time]
-         time_data[str(self.episode)] = t_data
-         json_file = open('./data/datasets/main_time.json', mode="w")
-         json.dump(time_data, json_file, ensure_ascii=False)
-         json_file.close()
+         # l_time = time.time() - start
 
-         print("inference_time {:.2g}s".format(i_time))
-         print("learning_time {:.2g}s".format(l_time))
-         print("\n")
+         # t_data = [i_time, l_time]
+         # time_data[str(self.episode)] = t_data
+         # json_file = open('./data/datasets/main_time.json', mode="w")
+         # json.dump(time_data, json_file, ensure_ascii=False)
+         # json_file.close()
+
+         # print("inference_time {:.2g}s".format(i_time))
+         # print("learning_time {:.2g}s".format(l_time))
+         # print("\n")
 
          self.episode += 1
 

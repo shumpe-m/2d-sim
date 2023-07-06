@@ -27,7 +27,7 @@ class CustomDataset():
 
       self.size_input = (480, 752)
       self.size_memory_scale = 4
-      self.size_cropped = (200, 200)
+      self.size_cropped = (300, 300)
       self.size_result = (32, 32)
 
       self.size_cropped_area = (self.size_cropped[0] // self.size_memory_scale, self.size_cropped[1] // self.size_memory_scale)

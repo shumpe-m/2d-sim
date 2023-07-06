@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import time
 import pathlib
+import gc
 
 import numpy as np
 import matplotlib.pyplot as plt
 import math
 import cv2
 import json
+
 
 class Environment:
    def __init__(self, size = (752, 480)):
@@ -20,7 +22,7 @@ class Environment:
 
       # np.random.seed(seed=1)
 
-   def plot_env(self, episode:int = 0, num_obj: int = 1, image_state:str = "grasp", display:bool=False, action:np.array=None, obj_info:dict=None, path:str="./data"):
+   def plot_env(self, episode:int = 0, num_obj: int = 1, image_state:str = "grasp", display:bool=False, action:np.array=None, obj_info:dict=None, path:str="./data", img_save:bool=True):
       path_dir = pathlib.Path(path)
 
       rgb_img = np.ones(self.rgb_size) * 255
@@ -32,21 +34,19 @@ class Environment:
          rgb_img, depth_img, info = self.draw_object(rgb_img, depth_img, action = action, obj_info=obj_info)
          infos[idx] = info
       
-      plt.show(block=False)
-      plt.gca().axis("off")
       if display:
+         plt.show(block=False)
+         plt.gca().axis("off")
          # plt.imshow(rgb_img)
          # plt.pause(0.5)
          plt.imshow(depth_img, cmap='gray')
          plt.pause(0.5)
          plt.clf()
          plt.close()
-      else:
-         # plt.imshow(rgb_img)
-         plt.imshow(depth_img, cmap='gray')
 
-      # cv2.imwrite(str(path_dir.joinpath('img/rgb_' + image_state + str(episode) + '.png')), rgb_img)
-      cv2.imwrite(str(path_dir.joinpath('img/depth_' + image_state + str(episode) + '.png')), depth_img)
+      if img_save:
+         # cv2.imwrite(str(path_dir.joinpath('img/rgb_' + image_state + str(episode) + '.png')), rgb_img)
+         cv2.imwrite(str(path_dir.joinpath('img/depth_' + image_state + str(episode) + '.png')), depth_img)
 
       #  
       if image_state == "grasp":
@@ -62,7 +62,7 @@ class Environment:
    def draw_object(self, rgb_img:np.array = None, depth_img:np.array = None, action:np.array = None, obj_info:list = None):
       if isinstance(obj_info,type(None)):
          # obj_form = self.obj_forms[np.random.randint(0, 2, 1)[0]]
-         obj_form = self.obj_forms[0]
+         obj_form = self.obj_forms[1]
          color = np.random.randint(0, 255, 3).tolist()
          depth = np.random.randint(40, 45, 1).tolist()
       else:

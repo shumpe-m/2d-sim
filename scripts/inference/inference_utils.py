@@ -13,7 +13,7 @@ class InferenceUtils:
                with_types=False,
    ):
       self.size_input = (480, 752)
-      self.size_original_cropped = (200, 200)
+      self.size_original_cropped = (300, 300)
       self.size_output = (32, 32)
       self.size_cropped = (110, 110)
       self.scale_factors = (
@@ -48,7 +48,8 @@ class InferenceUtils:
          dst_depth = cv2.warpAffine(image, rot_mat, self.size_cropped, borderMode=cv2.BORDER_REPLICATE, flags=cv2.INTER_AREA)
          mat_images.append(dst_depth)
 
-      mat_images = np.array(mat_images) / np.iinfo(orig_image.dtype).max
+      # mat_images = np.array(mat_images) / np.iinfo(orig_image.dtype).max
+      mat_images = np.array(mat_images)
       if len(mat_images.shape) == 3:
          mat_images = np.expand_dims(mat_images, axis=-1)
 

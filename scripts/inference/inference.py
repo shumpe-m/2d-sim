@@ -2,6 +2,7 @@ import time
 from typing import List
 import json
 
+import math
 import numpy as np
 import cv2
 from itertools import product
@@ -58,18 +59,16 @@ class Inference(InferenceUtils):
       grasp_action = {}
       place_action = {}
       if method == SelectionMethod.Random:
-         grasp_action["index"] = int(np.random.choice(range(3)))
+         grasp_action["index"] = int(np.random.choice(range(1)))
          grasp_action["pose"] = [np.random.uniform(self.lower_random_pose[0], self.upper_random_pose[0]),  # [m]
                                  np.random.uniform(self.lower_random_pose[1], self.upper_random_pose[1]),  # [m]
                                  np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])] 
-         grasp_action["estimated_reward"] = -1
          grasp_action["step"] = 0
 
          place_action["index"] = int(np.random.choice(range(3)))
          place_action["pose"] = [np.random.uniform(self.lower_random_pose[0], self.upper_random_pose[0]),  # [m]
                                  np.random.uniform(self.lower_random_pose[1], self.upper_random_pose[1]),  # [m]
                                  np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])]  # [rad]
-         place_action["estimated_reward"] = -1
          place_action["step"] = 0
 
          actions["grasp"] = grasp_action
@@ -84,17 +83,20 @@ class Inference(InferenceUtils):
          keys = list(obj_infos.keys())
          obj_info = obj_infos[keys[-1]]
          pose = obj_info["center_psoe"]
-         pose.append(obj_info["angle"])
+         pose[0] += int(np.random.normal(0, 40, 1))
+         pose[1] += int(np.random.normal(0, 40, 1))
+         if isinstance(obj_info["angle"], type(None)):
+            pose.append(np.random.normal(0, math.pi/4, 1)[0])
+         else:
+            pose.append(obj_info["angle"] + np.random.normal(0, math.pi/5, 1)[0])
          grasp_action["index"] = int(np.random.choice(range(3)))
          grasp_action["pose"] = pose
-         grasp_action["estimated_reward"] = -1
          grasp_action["step"] = 0
 
          place_action["index"] = int(np.random.choice(range(3)))
          place_action["pose"] = [np.random.uniform(self.lower_random_pose[0], self.upper_random_pose[0]),  # [m]
                                  np.random.uniform(self.lower_random_pose[1], self.upper_random_pose[1]),  # [m]
                                  np.random.uniform(self.lower_random_pose[2], self.upper_random_pose[2])]  # [rad]
-         place_action["estimated_reward"] = -1
          place_action["step"] = 0
 
          actions["grasp"] = grasp_action
