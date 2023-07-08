@@ -83,8 +83,8 @@ class Inference(InferenceUtils):
          keys = list(obj_infos.keys())
          obj_info = obj_infos[keys[-1]]
          pose = obj_info["center_psoe"]
-         pose[0] += int(np.random.normal(0, 40, 1))
-         pose[1] += int(np.random.normal(0, 40, 1))
+         pose[0] += int(np.random.normal(0, 20, 1))
+         pose[1] += int(np.random.normal(0, 20, 1))
          if isinstance(obj_info["angle"], type(None)):
             pose.append(np.random.normal(0, math.pi/4, 1)[0])
          else:
@@ -103,7 +103,7 @@ class Inference(InferenceUtils):
          actions["place"] = place_action
 
          return actions
-
+   
       input_images = self.get_images(images)
       goal_input_images = self.get_images(goal_images)
       place_input_images = self.get_images(place_images)
@@ -126,7 +126,8 @@ class Inference(InferenceUtils):
       reward_g = torch.permute(reward_g, (0, 2, 3, 1)).float()
       reward_p = torch.permute(reward_p, (0, 2, 3, 1)).float()
 
-      first_method = SelectionMethod.Prob if method in [SelectionMethod.Top5, SelectionMethod.Max] else method
+      first_method = SelectionMethod.PowerProb if method in [SelectionMethod.Top5, SelectionMethod.Max] else method
+      # first_method = SelectionMethod.Top5
 
       filter_lambda_n_grasp = self.get_filter_n(first_method, self.number_top_grasp)
       filter_lambda_n_place = self.get_filter_n(first_method, self.number_top_place)

@@ -107,7 +107,7 @@ class Train:
       model_time = time.time() - start
 
       start = time.time()
-      epoch = 50
+      epoch = 100
       with tqdm(range(epoch)) as pbar_epoch:
          for e in pbar_epoch:
             self.train(train_dataloaders, model, criterion, optimizer)
@@ -118,6 +118,18 @@ class Train:
       self.test(val_dataloader, model, criterion, optimizer)
       val_time = time.time() - start
 
+
+      outfile = './data/checkpoints/model.cpt'
+      torch.save({'combined_model_state_dict': model.state_dict(),
+                  'grasp_model_state_dict': model.grasp_model.state_dict(),
+                  'place_model_state_dict': model.place_model.state_dict(),
+                  'merge_model_state_dict': model.merge_model.state_dict(),
+                  'opt_state_dict': optimizer.state_dict(),
+                  }, outfile)
+      timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+      with open('./data/checkpoints/timestamp.txt', 'w') as f:
+         f.write(timestamp)
+
       time_data[str(len(time_data))] = [dataset_time, train_time, val_time, model_time]
       json_file = open('./data/datasets/learning_time.json', mode="w")
       json.dump(time_data, json_file, ensure_ascii=False)
@@ -127,8 +139,8 @@ class Train:
 
 
    def train(self, dataloader, model, loss_fn, optimizer):
-      size = len(dataloader.dataset)
-      losses = []
+      # size = len(dataloader.dataset)
+      # losses = []
       train_loss= 0
       for x, y in dataloader:
          x = tuple(torch.reshape(x_arr, (-1, 1, 32, 32)).to(self.device) for x_arr in x)
@@ -145,21 +157,8 @@ class Train:
          loss.backward()
          optimizer.step()
 
-         losses.append(loss.item())
-         train_loss += loss.item()
-
-
-      outfile = './data/checkpoints/model.cpt'
-      torch.save({'combined_model_state_dict': model.state_dict(),
-                  'grasp_model_state_dict': model.grasp_model.state_dict(),
-                  'place_model_state_dict': model.place_model.state_dict(),
-                  'merge_model_state_dict': model.merge_model.state_dict(),
-                  'opt_state_dict': optimizer.state_dict(),
-                  'loss': losses,
-                  }, outfile)
-      timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-      with open('./data/checkpoints/timestamp.txt', 'w') as f:
-         f.write(timestamp)
+         # losses.append(loss.item())
+         # train_loss += loss.item()
 
 
    def test(self, dataloader, model, loss_fn, optimizer):

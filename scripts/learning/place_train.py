@@ -156,7 +156,7 @@ class Train:
 
 train = Train(
    image_format="png",
-   dataset_path='./data/datasets/grasp_datasets.json'
+   dataset_path='./data/datasets/place_datasets.json'
 )
 
 train.run(False)

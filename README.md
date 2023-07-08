@@ -16,7 +16,7 @@ python3 utils/heatmap.py
 
 ### Grasp Modelを単体で学習
 
-- Get grasp data.
+- Get grasped data.
 ```
 python3 grasp_data.py
 ```
@@ -29,7 +29,7 @@ python3 learning/grasp_train.py
 
 ### Place Modelを単体で学習
 
-- Get grasp data.
+- Get placed data.
 ```
 python3 place_data.py
 ```

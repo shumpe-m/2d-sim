@@ -15,7 +15,7 @@ class CustomDataset():
    def __init__(self, episodes, seed=None):
       super().__init__()
       self.keys = list(episodes.keys())
-      self.keys = self.keys[-13000:]
+      self.keys = self.keys[-3000:]
       self.episodes_place_success_index = []
       self.episodes = {}
       for key in self.keys:
@@ -27,7 +27,7 @@ class CustomDataset():
 
       self.size_input = (480, 752)
       self.size_memory_scale = 4
-      self.size_cropped = (300, 300)
+      self.size_cropped = (250, 250)
       self.size_result = (32, 32)
 
       self.size_cropped_area = (self.size_cropped[0] // self.size_memory_scale, self.size_cropped[1] // self.size_memory_scale)
@@ -225,8 +225,6 @@ class CustomDataset():
       return r
 
    def get_data(self, data):
-      while len(data) > 20000:
-         data.pop(0)
 
       if len(data) == 0:
          for key in self.keys:
@@ -238,5 +236,8 @@ class CustomDataset():
          r = self.torch_generator(self.keys[-1])
          for b_dx in range(r[0].shape[0]):
             data.append(((r[0][b_dx], r[1][b_dx], r[2][b_dx]), (r[3][b_dx], r[4][b_dx], r[5][b_dx])))
+
+      while len(data) > 20000:
+         data.pop(0)
 
       return data

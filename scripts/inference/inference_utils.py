@@ -13,23 +13,35 @@ class InferenceUtils:
                with_types=False,
    ):
       self.size_input = (480, 752)
-      self.size_original_cropped = (300, 300)
+      self.size_original_cropped = (250, 250)
       self.size_output = (32, 32)
-      self.size_cropped = (110, 110)
+      self.size_cropped = (150, 150)
+      self.reward_g_shape = (None, 60, 60, None)
       self.scale_factors = (
          float(self.size_original_cropped[0]) / self.size_output[0],
          float(self.size_original_cropped[1]) / self.size_output[1]
       )
 
-      self.a_space = np.linspace(-1.484, 1.484, 16)  # [rad] # Don't use a=0.0
+      self.a_space = np.linspace(-np.pi / 2, np.pi / 2, 16)
 
       self.lower_random_pose = lower_random_pose
       self.upper_random_pose = upper_random_pose
 
 
    def pose_from_index(self, index, index_shape, resolution_factor=2.0):
-      x = (index[1] + 0.5) * resolution_factor * self.scale_factors[0]
-      y = (index[2] + 0.5) * resolution_factor * self.scale_factors[1]
+      size_reward_center = (index_shape[1] / 2, index_shape[2] / 2)
+      scale = self.size_original_cropped[0] / self.size_output[0] * ((self.reward_g_shape[1] * 2 - 1) / index_shape[1])
+
+      rot_mat = cv2.getRotationMatrix2D(size_reward_center, -self.a_space[index[0]] * 180.0 / np.pi, scale)
+      rot_mat[0][2] += self.size_input[0] / 2 - size_reward_center[0]
+      rot_mat[1][2] += self.size_input[1] / 2 - size_reward_center[1]
+
+      index_xy1 = np.array([index[1], index[2], 1.0]) 
+      xy = np.dot(rot_mat, index_xy1)
+      xy[0] = np.clip(xy[0], 0, 480)
+      xy[1] = np.clip(xy[1], 0, 752)
+      x = xy[0]
+      y = xy[1]
       a = -self.a_space[index[0]]  # [rad]
 
       return [x, y, a]
