@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     git \
     iputils-ping \
 	net-tools \
+    software-properties-common \
     curl \
 	init \
     build-essential \
@@ -40,6 +41,7 @@ RUN pip3 install \
     torchvision==0.11.1+cu113 \
     torchaudio==0.10.0+cu113 \
     -f https://download.pytorch.org/whl/cu113/torch_stable.html 
+
 RUN pip3 install \
     numpy \
     opencv-python \
@@ -48,7 +50,12 @@ RUN pip3 install \
     scikit-learn \
     seaborn \
     tqdm \
+    pyyaml \
     loguru
+
+# install nvtop
+RUN add-apt-repository ppa:flexiondotorg/nvtop && \
+    apt-get install -y nvtop
 
 RUN echo "cd /root/2d-sim/scripts" >> ~/.bashrc
 ENV PYTHONPATH="/root/2d-sim/scripts:$PYTHONPATH"

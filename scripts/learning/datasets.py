@@ -1,9 +1,11 @@
+import copy
+import pickle
+import yaml
+
 import cv2
 from loguru import logger
 import numpy as np
-import copy
 import random
-import pickle
 
 import torch
 from torch.utils.data import Dataset
@@ -14,6 +16,9 @@ from utils.image import  get_area_of_interest_new
 class CustomDataset():
    def __init__(self, episodes, seed=None):
       super().__init__()
+      with open('./config/config.yml', 'r') as yml:
+         config = yaml.safe_load(yml)
+      self.img_type = "depth"
       self.keys = list(episodes.keys())
       self.keys = self.keys[-3000:]
       self.episodes_place_success_index = []
@@ -23,12 +28,10 @@ class CustomDataset():
          if self.episodes[key]['place']['reward'] > 0:
             self.episodes_place_success_index.append(self.keys.index(key))
 
-
-
-      self.size_input = (480, 752)
+      self.size_input = (config["inference"]["img_width"], config["inference"]["img_height"])
       self.size_memory_scale = 4
-      self.size_cropped = (250, 250)
-      self.size_result = (32, 32)
+      self.size_cropped = (config["inference"]["size_original_cropped"], config["inference"]["size_original_cropped"])
+      self.size_result = (config["inference"]["size_output"], config["inference"]["size_output"])
 
       self.size_cropped_area = (self.size_cropped[0] // self.size_memory_scale, self.size_cropped[1] // self.size_memory_scale)
 
@@ -46,13 +49,8 @@ class CustomDataset():
       self.different_object_images = 4  # Only if place reward > 0
       self.different_jittered_object_images = 0  # Only if place reward > 0
 
-      self.box_distance = 0.281  # [m]
-
    #   self.indexer = GraspIndexer([0.05, 0.07, 0.086])  # [m]
       self.indexer = ([0.025, 0.05, 0.07, 0.086])  # [m]
-
-      self.img_type = "depth"
-
 
       self.seed = seed
       self.random_gen = np.random.RandomState(seed)

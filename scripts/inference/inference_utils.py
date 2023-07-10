@@ -1,3 +1,5 @@
+import yaml
+
 import copy
 import numpy as np
 import cv2 
@@ -12,14 +14,16 @@ class InferenceUtils:
                input_uncertainty=False,
                with_types=False,
    ):
-      self.size_input = (480, 752)
-      self.size_original_cropped = (250, 250)
-      self.size_output = (32, 32)
-      self.size_cropped = (150, 150)
-      self.reward_g_shape = (None, 60, 60, None)
+      with open('./config/config.yml', 'r') as yml:
+         config = yaml.safe_load(yml)
+      self.size_input = (config["inference"]["img_width"], config["inference"]["img_height"])
+      self.size_original_cropped = (config["inference"]["size_original_cropped"], config["inference"]["size_original_cropped"])
+      self.size_output = (config["inference"]["size_output"], config["inference"]["size_output"])
+      self.size_cropped = (config["inference"]["size_cropped"], config["inference"]["size_cropped"])
+      self.reward_g_shape = (None, config["inference"]["reward_g_shape"], config["inference"]["reward_g_shape"], None)
       self.scale_factors = (
-         float(self.size_original_cropped[0]) / self.size_output[0],
-         float(self.size_original_cropped[1]) / self.size_output[1]
+         float(self.size_original_cropped[0]) / float(self.size_output[0]),
+         float(self.size_original_cropped[1]) / float(self.size_output[1])
       )
 
       self.a_space = np.linspace(-np.pi / 2, np.pi / 2, 16)

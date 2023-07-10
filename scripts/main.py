@@ -4,13 +4,14 @@ import sys
 from subprocess import Popen
 import time
 import argparse
+import json
+import pickle
+import yaml
+from pathlib import Path
 
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-import json
-import pickle
-from pathlib import Path
 
 from learning.train import Train
 from inference.inference import Inference
@@ -24,6 +25,8 @@ from learning.train import Train
 class SelfLearning(Environment):
    def __init__(self, previous_experience, dataset_path, percentage_secondary):
       super().__init__()
+      with open('./config/config.yml', 'r') as yml:
+         config = yaml.safe_load(yml)
       self.inference = Inference()
       self.grasp_decision = GraspDecision()
       self.load_train_model =  False
@@ -33,7 +36,8 @@ class SelfLearning(Environment):
       self.secondary_selection_method = SelectionMethod.PowerProb
       self.previous_model_timestanp=""
       self.dataset_path = dataset_path
-      self.random = 50
+      self.total_episodes = config["manipulation"]["episode"]
+      self.random = config["manipulation"]["random"]
       
       if previous_experience:
          with open(self.dataset_path, mode="rt", encoding="utf-8") as f:
@@ -61,7 +65,7 @@ class SelfLearning(Environment):
       data = {}
       time_data = {}
 
-      while self.episode < 10000:
+      while self.episode < self.total_episodes:
          start = time.time()
          print(self.episode)
          if self.episode < self.random:

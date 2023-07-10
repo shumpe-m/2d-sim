@@ -3,6 +3,7 @@ import datetime
 import time
 import json
 import pickle
+import yaml
 from tqdm import tqdm
 
 import numpy as np
@@ -18,18 +19,20 @@ from learning.metrics import Losses
 
 class Train:
    def __init__(self, dataset_path=None, image_format='png'):
+      with open('./config/config.yml', 'r') as yml:
+         config = yaml.safe_load(yml)
       self.input_shape = [None, None, 1] if True else [None, None, 3]
+      self.epoch = config["train"]["epoch"]
       self.z_shape = 48
-      self.train_batch_size = 512
-      self.validation_batch_size = 512
+      self.train_batch_size = config["train"]["train_batch_size"]
+      self.validation_batch_size = config["train"]["validation_batch_size"]
       self.percent_validation_set = 0.2
+
+      self.dataset_path = dataset_path
+      self.dataset_tensor = []
+
       self.device = "cuda" if torch.cuda.is_available() else "cpu"
       torch.manual_seed(0)
-
-      self.previous_epoch = 0
-      self.dataset_path = dataset_path
-
-      self.dataset_tensor = []
 
    def run(self, load_model=True):
       time_data = {}
@@ -107,8 +110,7 @@ class Train:
       model_time = time.time() - start
 
       start = time.time()
-      epoch = 100
-      with tqdm(range(epoch)) as pbar_epoch:
+      with tqdm(range(self.epoch)) as pbar_epoch:
          for e in pbar_epoch:
             self.train(train_dataloaders, model, criterion, optimizer)
 
