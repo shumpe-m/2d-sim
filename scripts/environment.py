@@ -16,7 +16,7 @@ class Environment:
       self.depth_size = (size[0], size[1], 1)
 
       self.obj_forms = ["rectangle", "circle"]
-      self.size_range = [75, 100] # [min,max]
+      self.size_range = [100, 125] # [min,max]
       self.rec_size = [50, 80]
       self.cir_size = [40]
 
@@ -62,7 +62,7 @@ class Environment:
    def draw_object(self, rgb_img:np.array = None, depth_img:np.array = None, action:np.array = None, obj_info:list = None):
       if isinstance(obj_info,type(None)):
          # obj_form = self.obj_forms[np.random.randint(0, 2, 1)[0]]
-         obj_form = self.obj_forms[1]
+         obj_form = self.obj_forms[0]
          color = np.random.randint(0, 255, 3).tolist()
          depth = np.random.randint(40, 45, 1).tolist()
       else:
@@ -115,8 +115,8 @@ class Environment:
             obj_cpose += np.array([self.size_range[1]/2, self.size_range[1]/2])
             angle = np.random.rand() * math.pi - math.pi/2
          else:
-            obj_cpose = np.array(action[:2])
-            angle = action[2]
+            obj_cpose = np.array(action[:2]) + np.random.randint(-8, 8, 2)
+            angle = -action[2] + np.random.normal(0, math.pi/20, 1)[0]
 
          left = - obj_size[0] / 2
          right = + obj_size[0] / 2
@@ -140,7 +140,7 @@ class Environment:
             obj_cpose = np.multiply(np.random.rand(2), pose_range)
             obj_cpose += np.array([self.size_range[1]/2, self.size_range[1]/2])
          else:
-            obj_cpose = np.array(action[:2])
+            obj_cpose = np.array(action[:2]) + np.random.randint(-8, 8, 2)
 
          return obj_cpose.astype(np.int64), obj_size
 
@@ -150,8 +150,8 @@ class Environment:
 
 
 if __name__ == "__main__":
-   episode = 0
+   episode = 1000
 
    env = Environment(size = (752, 480))
-   # output=env.plot_env(episode = episode, num_obj = 3, image_state = "grasp")
+   output=env.plot_env(episode = episode, num_obj = 2, image_state = "grasp")
    # print(output[0].shape)

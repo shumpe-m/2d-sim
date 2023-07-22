@@ -96,7 +96,7 @@ class Train:
          model.load_state_dict(stdict_m)
          optimizer.load_state_dict(stdict_o)
 
-      epoch = 10000
+      epoch = 500
       self.current_e = 0
       with tqdm(range(epoch)) as pbar_epoch:
          for e in pbar_epoch:
@@ -132,7 +132,7 @@ class Train:
          loss.backward()
          optimizer.step()
          train_loss += loss.item()
-      self.writer.add_scalar("loss", train_loss/size, self.current_e)
+      # self.writer.add_scalar("loss", train_loss/size, self.current_e)
 
 
 

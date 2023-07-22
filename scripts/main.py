@@ -130,7 +130,7 @@ class SelfLearning(Environment):
             )
 
          start = time.time()
-         if self.episode > self.random - 1:
+         if self.episode > self.random - 100:
             self.train.run(self.load_train_model)
 
          l_time = time.time() - start

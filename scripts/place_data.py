@@ -62,7 +62,7 @@ class SelfLearning(Environment):
       data = {}
       time_data = {}
 
-      while self.episode < 12000:
+      while self.episode < 1000:
          start = time.time()
          print(self.episode)
          method = "oracle"
@@ -87,7 +87,8 @@ class SelfLearning(Environment):
 
          reward = 0
          for obj_info in obj_infos:
-            grasp_execute = self.grasp_decision.is_cheked_grasping(actions["grasp"], obj_infos[str(obj_info)])
+            # grasp_execute = self.grasp_decision.is_cheked_grasping(actions["grasp"], obj_infos[str(obj_info)])
+            grasp_execute = True
             if grasp_execute:
                place_obj_info = obj_infos[str(obj_info)]
                reward = 1

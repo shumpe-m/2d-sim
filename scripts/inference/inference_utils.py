@@ -34,7 +34,7 @@ class InferenceUtils:
 
    def pose_from_index(self, index, index_shape, resolution_factor=2.0):
       size_reward_center = (index_shape[1] / 2, index_shape[2] / 2)
-      scale = self.size_original_cropped[0] / self.size_output[0] * ((self.reward_g_shape[1] * 2 - 1) / index_shape[1])
+      scale = self.size_original_cropped[0] / self.size_output[0] * ((self.reward_g_shape[1] * 2 ) / index_shape[1])
 
       rot_mat = cv2.getRotationMatrix2D(size_reward_center, -self.a_space[index[0]] * 180.0 / np.pi, scale)
       rot_mat[0][2] += self.size_input[0] / 2 - size_reward_center[0]

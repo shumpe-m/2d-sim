@@ -57,7 +57,6 @@ class GraspModel(nn.Module):
       x = self.conv_block_z5(x)
       x = self.conv_block_z6(x)
       z = self.conv_block_z_last(x)
-
       return z, reward
 
 

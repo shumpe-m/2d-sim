@@ -1,3 +1,4 @@
+import yaml
 import cv2
 from loguru import logger
 import numpy as np
@@ -26,10 +27,12 @@ class CustomDataset():
 
 
 
-      self.size_input = (480, 752)
+      with open('./config/config.yml', 'r') as yml:
+         config = yaml.safe_load(yml)
+      self.size_input = (config["inference"]["img_width"], config["inference"]["img_height"])
       self.size_memory_scale = 4
-      self.size_cropped = (300, 300)
-      self.size_result = (32, 32)
+      self.size_cropped = (config["inference"]["size_original_cropped"], config["inference"]["size_original_cropped"])
+      self.size_result = (config["inference"]["size_output"], config["inference"]["size_output"])
 
       self.size_cropped_area = (self.size_cropped[0] // self.size_memory_scale, self.size_cropped[1] // self.size_memory_scale)
 
@@ -37,7 +40,7 @@ class CustomDataset():
       self.use_further_hindsight = False
       self.use_negative_foresight = True
       self.use_own_goal = True
-      self.use_different_episodes_as_goals = True
+      self.use_different_episodes_as_goals = False
 
       self.jittered_hindsight_images = 1
       self.jittered_hindsight_x_images = 2  # Only if place reward > 0
@@ -75,18 +78,18 @@ class CustomDataset():
          return np.expand_dims(area, 2)
       return area
 
-   def jitter_pose(self, pose, scale_x=0.05, scale_y=0.05, scale_a=1.5, around=True):
+   def jitter_pose(self, pose, scale_x=30, scale_y=30, scale_a=1.5, around=True):
       new_pose = copy.deepcopy(pose)
 
       if around:
-         low = [np.minimum(0.001, scale_x), np.minimum(0.001, scale_y), np.minimum(0.06, scale_a)]
-         mode = [np.minimum(0.006, scale_x), np.minimum(0.006, scale_y), np.minimum(0.32, scale_a)]
-         high = [scale_x + 1e-6, scale_y + 1e-6, scale_a + 1e-6]
+         low = [np.minimum(1, scale_x), np.minimum(1, scale_y), np.minimum(0.06, scale_a)]
+         mode = [np.minimum(6, scale_x), np.minimum(6, scale_y), np.minimum(0.32, scale_a)]
+         high = [scale_x + 1, scale_y + 1, scale_a + 1]
          dx, dy, da = self.random_gen.choice([-1, 1], size=3) * self.random_gen.triangular(low, mode, high, size=3)
       else:
-         low = [-scale_x - 1e-6, -scale_y - 1e-6, -scale_a - 1e-6]
+         low = [-scale_x - 1, -scale_y - 1, -scale_a - 1]
          mode = [0.0, 0.0, 0.0]
-         high = [scale_x + 1e-6, scale_y + 1e-6, scale_a + 1e-6]
+         high = [scale_x + 1, scale_y + 1, scale_a + 1]
          dx, dy, da = self.random_gen.triangular(low, mode, high, size=3)
 
       new_pose[0] += np.cos(pose[2]) * dx - np.sin(pose[2]) * dy
@@ -156,7 +159,7 @@ class CustomDataset():
 
          if place['reward'] > 0:
                result += [
-                  generate_goal('after', place['pose'], jitter={'scale_x': 0.02, 'scale_y': 0.01, 'scale_a': 0.2})
+                  generate_goal('after', place['pose'], jitter={'scale_x': 15, 'scale_y': 8, 'scale_a': 0.2})
                   for _ in range(self.jittered_hindsight_x_images)
                ]
       #TODO some actions

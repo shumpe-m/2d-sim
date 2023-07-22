@@ -4,6 +4,7 @@ import numpy as np
 import copy
 import random
 import pickle
+import yaml
 
 import torch
 from torch.utils.data import Dataset
@@ -17,11 +18,12 @@ class CustomDataset():
       self.keys = list(episodes.keys())
       self.episodes = episodes
 
-
-      self.size_input = (480, 752)
+      with open('./config/config.yml', 'r') as yml:
+         config = yaml.safe_load(yml)
+      self.size_input = (config["inference"]["img_width"], config["inference"]["img_height"])
       self.size_memory_scale = 4
-      self.size_cropped = (300, 300)
-      self.size_result = (32, 32)
+      self.size_cropped = (config["inference"]["size_original_cropped"], config["inference"]["size_original_cropped"])
+      self.size_result = (config["inference"]["size_output"], config["inference"]["size_output"])
 
       self.size_cropped_area = (self.size_cropped[0] // self.size_memory_scale, self.size_cropped[1] // self.size_memory_scale)
 
@@ -68,7 +70,8 @@ class CustomDataset():
       # TODO: grasp width
       grasp_index = grasp['index']
 
-      return np.array(grasp_before_area.transpose(2, 0, 1), dtype=np.float32), np.array(reward_grasp, dtype=np.float32)
+      # return np.array(grasp_before_area.transpose(2, 0, 1), dtype=np.float32), np.array(reward_grasp, dtype=np.float32)
+      return np.array(grasp_before_area.transpose(2, 0, 1), dtype=np.float32), np.array([grasp_index, reward_grasp], dtype=np.float32)
       
 
       

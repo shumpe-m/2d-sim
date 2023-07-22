@@ -1,13 +1,13 @@
 manipulation:
   episode: 10000
-  random: 200
+  random: 400
 inference:
   img_height: 752
   img_width: 480
-  size_original_cropped: 250
+  size_original_cropped: 220
   size_output: 32
-  size_cropped: 150
-  reward_g_shape: 60
+  size_cropped: 160
+  reward_g_shape: 65
 train:
   epoch: 50
   train_batch_size: 512

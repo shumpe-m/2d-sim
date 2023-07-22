@@ -96,7 +96,7 @@ class Train:
          model.load_state_dict(stdict_m)
          optimizer.load_state_dict(stdict_o)
 
-      epoch = 10000
+      epoch = 5000
       self.current_e = 0
       with tqdm(range(epoch)) as pbar_epoch:
          for e in pbar_epoch:
@@ -121,10 +121,17 @@ class Train:
          if x.shape[0] == 1:
             break
          x = x.to(self.device)
-         y = torch.reshape(y, (-1, 1, 1, 1)).to(self.device)
+         # y = torch.reshape(y, (-1, 1, 1, 1)).to(self.device)
+         y = torch.reshape(y, (-1, 1, 1, 2)).to(self.device)
+         
 
          z_g, reward_g= model(x)
-         loss = loss_fn(reward_g, y)
+
+         index = y[:,:,:,0].clone().detach().to(torch.int64).unsqueeze(dim=1)
+         grasp_pred = torch.gather(reward_g, 1, index)
+
+         # loss = loss_fn(reward_g, y)
+         loss = loss_fn(grasp_pred, torch.reshape(y[:,:,:,1], (-1, 1, 1, 1)))
 
          # Backpropagation
          optimizer.zero_grad()
@@ -145,13 +152,73 @@ class Train:
             if x.shape[0] == 1:
                break
             x = x.to(self.device)
-            y = torch.reshape(y, (-1, 1, 1, 1)).to(self.device)
+            # y = torch.reshape(y, (-1, 1, 1, 1)).to(self.device)
+            y = torch.reshape(y, (-1, 1, 1, 2)).to(self.device)
 
             z_g, reward_g = model(x)
-            test_loss += loss_fn(reward_g, y).item()
+
+            index = y[:,:,:,0].clone().detach().to(torch.int64).unsqueeze(dim=1)
+            grasp_pred = torch.gather(reward_g, 1, index)
+
+            # test_loss += loss_fn(reward_g, y).item()
+            test_loss += loss_fn(grasp_pred, torch.reshape(y[:,:,:,1], (-1, 1, 1, 1))).item()
 
       test_loss /= size
       print(f"Avg loss: {test_loss:>8f}")
+
+
+   # def train(self, dataloader, model, loss_fn, optimizer):
+   #    train_loss= 0
+   #    size = len(dataloader.dataset)
+   #    for x, y in dataloader:
+   #       if x.shape[0] == 1:
+   #          break
+   #       x = x.to(self.device)
+   #       y = torch.reshape(y, (-1, 1, 1, 1)).to(self.device)
+   #       # y = torch.reshape(y, (-1, 1, 1, 2)).to(self.device)
+         
+
+   #       z_g, reward_g= model(x)
+
+   #       # index = y[:,:,:,0].clone().detach().to(torch.int64).unsqueeze(dim=1)
+   #       # grasp_pred = torch.gather(reward_g, 1, index)
+
+   #       loss = loss_fn(reward_g, y)
+   #       # loss = loss_fn(grasp_pred, torch.reshape(y[:,:,:,1], (-1, 1, 1, 1)))
+
+   #       # Backpropagation
+   #       optimizer.zero_grad()
+   #       loss.backward()
+   #       optimizer.step()
+   #       train_loss += loss.item()
+   #    self.writer.add_scalar("loss", train_loss/size, self.current_e)
+
+
+
+
+   # def test(self, dataloader, model, loss_fn, optimizer):
+   #    size = len(dataloader.dataset)
+   #    model.eval()
+   #    test_loss, correct = 0, 0
+   #    with torch.no_grad():
+   #       for x, y in dataloader:
+   #          if x.shape[0] == 1:
+   #             break
+   #          x = x.to(self.device)
+   #          y = torch.reshape(y, (-1, 1, 1, 1)).to(self.device)
+   #          # y = torch.reshape(y, (-1, 1, 1, 2)).to(self.device)
+
+   #          z_g, reward_g = model(x)
+
+   #          # index = y[:,:,:,0].clone().detach().to(torch.int64).unsqueeze(dim=1)
+   #          # grasp_pred = torch.gather(reward_g, 1, index)
+
+   #          test_loss += loss_fn(reward_g, y).item()
+   #          # test_loss += loss_fn(grasp_pred, torch.reshape(y[:,:,:,1], (-1, 1, 1, 1))).item()
+
+   #    test_loss /= size
+   #    print(f"Avg loss: {test_loss:>8f}")
+
 
 train = Train(
    image_format="png",

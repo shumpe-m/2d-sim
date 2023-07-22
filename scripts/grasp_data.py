@@ -60,8 +60,10 @@ class SelfLearning(Environment):
    def manipulate(self):
       data = {}
       time_data = {}
+      grasp_success = 0
+      total_episode = 6000
 
-      while self.episode < 10000:
+      while self.episode < total_episode:
          start = time.time()
          print(self.episode)
          method = "oracle"
@@ -90,6 +92,7 @@ class SelfLearning(Environment):
             if grasp_execute:
                place_obj_info = obj_infos[str(obj_info)]
                reward = 1
+               grasp_success += 1
                print(" #### grasp_success #### ")
                break
          actions["grasp"]["reward"] = reward
@@ -111,7 +114,10 @@ class SelfLearning(Environment):
          json_file.close()
 
          self.episode += 1
-
+         print()
+      print("number of total episodes: ", total_episode)
+      print("number of grasp_success: ", grasp_success)
+      print("grasp success rate: ", grasp_success / total_episode)
 
 
 
