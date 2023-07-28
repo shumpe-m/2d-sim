@@ -62,7 +62,7 @@ class SelfLearning(Environment):
       data = {}
       time_data = {}
 
-      while self.episode < 1000:
+      while self.episode < 200:
          start = time.time()
          print(self.episode)
          method = "oracle"

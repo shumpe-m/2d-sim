@@ -123,14 +123,14 @@ class SelfLearning(Environment):
             self.load_train_model = True
          i_time = time.time() - start
          # init
-         if self.episode % 100 == 0:
+         if self.episode % 10 == 0:
             self.train = Train(
                image_format="png",
                dataset_path=self.dataset_path
             )
 
          start = time.time()
-         if self.episode > self.random - 100:
+         if self.episode > self.random - 300:
             self.train.run(self.load_train_model)
 
          l_time = time.time() - start

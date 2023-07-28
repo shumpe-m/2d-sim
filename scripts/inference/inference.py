@@ -93,7 +93,7 @@ class Inference(InferenceUtils):
             a_index = np.argmin(np.abs(np.array(self.a_space) - a))
             pose.append(self.a_space[a_index])
 
-         noise = [int(np.random.normal(0, 35, 1)), int(np.random.normal(0, 20, 1))]
+         noise = [int(np.random.normal(0, 20, 1)), int(np.random.normal(0, 20, 1))]
          pose[0] += noise[0] * math.cos(pose[2]) + noise[1] * math.sin(pose[2]) * -1
          pose[1] += noise[0] * math.sin(pose[2]) + noise[1] * math.cos(pose[2]) * -1
       

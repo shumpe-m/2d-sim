@@ -40,7 +40,7 @@ class InferenceUtils:
       rot_mat[0][2] += self.size_input[0] / 2 - size_reward_center[0]
       rot_mat[1][2] += self.size_input[1] / 2 - size_reward_center[1]
 
-      index_xy1 = np.array([index[1], index[2], 1.0]) 
+      index_xy1 = np.array([index[2], index[1], 1.0]) 
       xy = np.dot(rot_mat, index_xy1)
       xy[0] = np.clip(xy[0], 0, 480)
       xy[1] = np.clip(xy[1], 0, 752)

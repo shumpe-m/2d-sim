@@ -78,7 +78,7 @@ class CustomDataset():
          return np.expand_dims(area, 2)
       return area
 
-   def jitter_pose(self, pose, scale_x=30, scale_y=30, scale_a=1.5, around=True):
+   def jitter_pose(self, pose, scale_x=50, scale_y=50, scale_a=1.5, around=True):
       new_pose = copy.deepcopy(pose)
 
       if around:
@@ -87,9 +87,9 @@ class CustomDataset():
          high = [scale_x + 1, scale_y + 1, scale_a + 1]
          dx, dy, da = self.random_gen.choice([-1, 1], size=3) * self.random_gen.triangular(low, mode, high, size=3)
       else:
-         low = [-scale_x - 1, -scale_y - 1, -scale_a - 1]
+         low = [-scale_x - 0.01, -scale_y - 1, -scale_a - 0.01]
          mode = [0.0, 0.0, 0.0]
-         high = [scale_x + 1, scale_y + 1, scale_a + 1]
+         high = [scale_x + 0.01, scale_y + 1, scale_a + 0.01]
          dx, dy, da = self.random_gen.triangular(low, mode, high, size=3)
 
       new_pose[0] += np.cos(pose[2]) * dx - np.sin(pose[2]) * dy
@@ -159,7 +159,7 @@ class CustomDataset():
 
          if place['reward'] > 0:
                result += [
-                  generate_goal('after', place['pose'], jitter={'scale_x': 15, 'scale_y': 8, 'scale_a': 0.2})
+                  generate_goal('after', place['pose'], jitter={'scale_x': 20, 'scale_y': 10, 'scale_a': 0.2})
                   for _ in range(self.jittered_hindsight_x_images)
                ]
       #TODO some actions

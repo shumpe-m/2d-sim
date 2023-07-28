@@ -61,8 +61,8 @@ class Environment:
 
    def draw_object(self, rgb_img:np.array = None, depth_img:np.array = None, action:np.array = None, obj_info:list = None):
       if isinstance(obj_info,type(None)):
-         # obj_form = self.obj_forms[np.random.randint(0, 2, 1)[0]]
-         obj_form = self.obj_forms[0]
+         obj_form = self.obj_forms[np.random.randint(0, 2, 1)[0]]
+         # obj_form = self.obj_forms[0]
          color = np.random.randint(0, 255, 3).tolist()
          depth = np.random.randint(40, 45, 1).tolist()
       else:

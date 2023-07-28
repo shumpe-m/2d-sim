@@ -61,7 +61,7 @@ class SelfLearning(Environment):
       data = {}
       time_data = {}
       grasp_success = 0
-      total_episode = 6000
+      total_episode = 2000
 
       while self.episode < total_episode:
          start = time.time()

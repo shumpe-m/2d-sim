@@ -1,15 +1,15 @@
 manipulation:
   episode: 10000
-  random: 400
+  random: 800
 inference:
   img_height: 752
   img_width: 480
   size_original_cropped: 220
   size_output: 32
-  size_cropped: 160
-  reward_g_shape: 65
+  size_cropped: 110
+  reward_g_shape: 40
 train:
-  epoch: 50
+  epoch: 10
   train_batch_size: 512
   validation_batch_size: 512
   percent_validation_set: 0.2

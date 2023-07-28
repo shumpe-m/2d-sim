@@ -96,7 +96,7 @@ class Train:
          model.load_state_dict(stdict_m)
          optimizer.load_state_dict(stdict_o)
 
-      epoch = 500
+      epoch = 2000
       self.current_e = 0
       with tqdm(range(epoch)) as pbar_epoch:
          for e in pbar_epoch:
